@@ -7,6 +7,10 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
 
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="HeaderHoverBrush" Color="#EEF2F7" />
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#4B5563" />
+
     <!-- 配置栏标签 -->
     <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}" />
