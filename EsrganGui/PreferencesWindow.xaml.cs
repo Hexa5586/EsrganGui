@@ -16,6 +16,7 @@ namespace EsrganGui
         public PreferencesWindow(AppPreferences preferences)
         {
             InitializeComponent();
+            ThemeManager.AttachTitleBar(this);
 
             Preferences = preferences.Clone();
             ThemeComboBox.SelectedIndex = (int)Preferences.Theme;
@@ -67,6 +68,8 @@ namespace EsrganGui
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
+            ThemeManager.Apply(preferences.Theme);
 
             Preferences = preferences;
             Saved = true;

@@ -13,7 +13,7 @@
         MinHeight="380"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
-        Background="#F3F4F6"
+        Background="{DynamicResource WindowBackgroundBrush}"
         FontFamily="Microsoft YaHei UI"
         FontSize="13"
         UseLayoutRounding="True"
@@ -27,8 +27,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="GroupBox">
-                        <Border Background="White"
-                                BorderBrush="{StaticResource CardBorderBrush}"
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Padding="{TemplateBinding Padding}"
@@ -40,7 +40,7 @@
                                 </Grid.RowDefinitions>
                                 <TextBlock Margin="0,0,0,12"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextBrush}"
+                                           Foreground="{DynamicResource TextBrush}"
                                            Text="{TemplateBinding Header}" />
                                 <ContentPresenter Grid.Row="1" />
                             </Grid>
@@ -53,7 +53,7 @@
         <Style x:Key="HintTextStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,8,0,0" />
             <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
     </Window.Resources>
@@ -87,7 +87,7 @@
                                 <ComboBoxItem Content="跟随系统" />
                             </ComboBox>
                         </Grid>
-                        <TextBlock Text="主题切换效果将在后续版本中实现，当前仅保存选择。"
+                        <TextBlock Text="选择“跟随系统”时，会根据 Windows 的应用主题自动切换浅色或深色。"
                                    Style="{StaticResource HintTextStyle}" />
                     </StackPanel>
                 </GroupBox>

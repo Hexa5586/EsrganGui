@@ -52,8 +52,12 @@ namespace EsrganGui
 
         public MainWindow()
         {
-            InitializeComponent();
             _preferences = PreferencesStore.Load();
+            ThemeManager.Apply(_preferences.Theme);
+
+            InitializeComponent();
+            ThemeManager.AttachTitleBar(this);
+
             DataContext = this;
             LoadModels();
             FitToWorkArea();
@@ -602,6 +606,7 @@ namespace EsrganGui
             if (window.Saved)
             {
                 _preferences = window.Preferences;
+                ThemeManager.Apply(_preferences.Theme);
                 RecalculateOutputPaths();
             }
         }
