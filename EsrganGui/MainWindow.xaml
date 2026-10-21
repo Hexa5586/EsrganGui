@@ -14,7 +14,7 @@
         MinWidth="820"
         MinHeight="520"
         WindowStartupLocation="CenterScreen"
-        Background="#F3F4F6"
+        Background="{DynamicResource WindowBackgroundBrush}"
         FontFamily="Microsoft YaHei UI"
         FontSize="13"
         UseLayoutRounding="True"
@@ -25,8 +25,8 @@
 
         <!-- 卡片容器 -->
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="1" />
@@ -35,8 +35,8 @@
         <!-- 蓝色进度条：Value = 已完成数量，Maximum = 总数 -->
         <Style x:Key="TaskProgressBarStyle" TargetType="ProgressBar">
             <Setter Property="Height" Value="8" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Background" Value="#E4E9F2" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
@@ -138,14 +138,14 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="MinHeight" Value="38" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
                         <Border x:Name="Bd"
                                 Background="Transparent"
-                                BorderBrush="#F1F3F5"
+                                BorderBrush="{DynamicResource RowBorderBrush}"
                                 BorderThickness="0,0,0,1"
                                 SnapsToDevicePixels="True">
                             <GridViewRowPresenter Columns="{TemplateBinding GridView.ColumnCollection}"
@@ -154,10 +154,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#F7F9FC" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#E8F0FE" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowSelectedBrush}" />
                             </Trigger>
                             <!-- 完成项：Light 主题 #A3FFA3；Dark 主题适配时使用 #00DD00，文字 #000000 -->
                             <DataTrigger Binding="{Binding IsCompleted}" Value="True">
@@ -185,7 +185,7 @@
         <DataTemplate x:Key="PreviewToolTipTemplate">
             <StackPanel MaxWidth="320">
                 <Border Margin="6,6,6,0"
-                        Background="#F3F4F6"
+                        Background="{DynamicResource SurfaceAltBrush}"
                         CornerRadius="4">
                     <Grid>
                         <Image x:Name="Thumb"
@@ -196,7 +196,7 @@
                                Source="{Binding Converter={StaticResource ThumbnailConverter}}" />
                         <TextBlock x:Name="NoPreview"
                                    Margin="12,18"
-                                   Foreground="#9CA3AF"
+                                   Foreground="{DynamicResource DisabledTextBrush}"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
                                    Text="暂无可用预览">
@@ -215,7 +215,7 @@
                 </Border>
                 <TextBlock Margin="8,4,8,7"
                            FontSize="11"
-                           Foreground="{StaticResource SubtleTextBrush}"
+                           Foreground="{DynamicResource SubtleTextBrush}"
                            Text="{Binding}"
                            TextWrapping="Wrap" />
             </StackPanel>
@@ -224,8 +224,8 @@
         <Style x:Key="PreviewToolTipStyle" TargetType="ToolTip">
             <Setter Property="Padding" Value="0" />
             <Setter Property="MaxWidth" Value="340" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#D9DEE5" />
+            <Setter Property="Background" Value="{DynamicResource ToolTipBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ToolTipBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="HasDropShadow" Value="True" />
             <Setter Property="Placement" Value="Mouse" />
@@ -325,8 +325,8 @@
                 <Canvas x:Name="MarqueeCanvas" ClipToBounds="True" IsHitTestVisible="False">
                     <Border x:Name="MarqueeRectangle"
                             Visibility="Collapsed"
-                            Background="#332563EB"
-                            BorderBrush="{StaticResource AccentBrush}"
+                            Background="{DynamicResource MarqueeFillBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}"
                             BorderThickness="1"
                             CornerRadius="2"
                             SnapsToDevicePixels="True" />
@@ -403,7 +403,7 @@
                     <TextBlock Text="%"
                                Margin="6,0,0,0"
                                VerticalAlignment="Center"
-                               Foreground="{StaticResource SubtleTextBrush}" />
+                               Foreground="{DynamicResource SubtleTextBrush}" />
                 </StackPanel>
 
                 <TextBlock Grid.Row="1"
@@ -456,12 +456,12 @@
                             Click="RemoveSelectedButton_Click" />
                     <TextBlock Margin="12,0,0,0"
                                VerticalAlignment="Center"
-                               Foreground="{StaticResource SubtleTextBrush}"
+                               Foreground="{DynamicResource SubtleTextBrush}"
                                Text="{Binding Jobs.Count, StringFormat='共 {0} 项'}" />
                     <TextBlock x:Name="StatusText"
                                Margin="16,0,0,0"
                                VerticalAlignment="Center"
-                               Foreground="{StaticResource SubtleTextBrush}"
+                               Foreground="{DynamicResource SubtleTextBrush}"
                                Text="就绪" />
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
