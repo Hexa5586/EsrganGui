@@ -32,6 +32,30 @@
             <Setter Property="Padding" Value="1" />
         </Style>
 
+        <!-- 蓝色进度条：Value = 已完成数量，Maximum = 总数 -->
+        <Style x:Key="TaskProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="#E4E9F2" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                ClipToBounds="True"
+                                SnapsToDevicePixels="True">
+                            <Grid x:Name="PART_Track">
+                                <Border x:Name="PART_Indicator"
+                                        HorizontalAlignment="Left"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="4" />
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- 列表列标题：可点击排序，可拖动调整列顺序 -->
         <Style x:Key="ColumnHeaderStyle" TargetType="GridViewColumnHeader">
             <Setter Property="Background" Value="#F8FAFC" />
@@ -188,6 +212,7 @@
             <RowDefinition Height="*" MinHeight="160" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- 上：任务列表 -->
@@ -250,35 +275,63 @@
             </Grid>
         </Border>
 
+        <!-- 完成进度：蓝色进度条 -->
+        <ProgressBar x:Name="JobProgressBar"
+                     Grid.Row="1"
+                     Height="8"
+                     Margin="0,12,0,0"
+                     Minimum="0"
+                     Maximum="1"
+                     Value="0"
+                     Style="{StaticResource TaskProgressBarStyle}" />
+
         <!-- 中：配置栏 -->
-        <Border x:Name="SettingsPanel" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16,14" Margin="0,12,0,0">
+        <Border x:Name="SettingsPanel" Grid.Row="2" Style="{StaticResource CardStyle}" Padding="16,14" Margin="0,12,0,0">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MaxWidth="320" />
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <WrapPanel Grid.Row="0" VerticalAlignment="Center">
-                    <TextBlock Text="模型" Style="{StaticResource FieldLabelStyle}" />
-                    <ComboBox x:Name="ModelComboBox"
-                              Width="280"
-                              Style="{StaticResource ComboBoxStyle}"
-                              ItemsSource="{Binding Models}"
-                              SelectionChanged="ModelComboBox_SelectionChanged"
-                              ToolTip="模型读取自程序目录下的 realesrgan\models" />
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="模型"
+                           Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox x:Name="ModelComboBox"
+                          Grid.Row="0"
+                          Grid.Column="1"
+                          Width="280"
+                          Style="{StaticResource ComboBoxStyle}"
+                          ItemsSource="{Binding Models}"
+                          SelectionChanged="ModelComboBox_SelectionChanged"
+                          ToolTip="模型读取自程序目录下的 realesrgan\models" />
 
-                    <CheckBox x:Name="CompressCheckBox"
-                              Content="压缩输出"
-                              Margin="48,0,0,0"
-                              VerticalAlignment="Center"
-                              VerticalContentAlignment="Center"
-                              IsChecked="False"
-                              Style="{StaticResource CheckBoxStyle}"
-                              ToolTip="勾选后使用下方质量参数压缩输出图片"
-                              Checked="OutputSettings_Changed"
-                              Unchecked="OutputSettings_Changed" />
+                <CheckBox x:Name="CompressCheckBox"
+                          Grid.Row="0"
+                          Grid.Column="2"
+                          Content="压缩输出"
+                          Margin="48,0,0,0"
+                          VerticalAlignment="Center"
+                          VerticalContentAlignment="Center"
+                          IsChecked="False"
+                          Style="{StaticResource CheckBoxStyle}"
+                          ToolTip="勾选后使用下方质量参数压缩输出图片"
+                          Checked="OutputSettings_Changed"
+                          Unchecked="OutputSettings_Changed" />
 
-                    <TextBlock Text="压缩质量" Style="{StaticResource FieldLabelStyle}" Margin="20,0,8,0" />
+                <StackPanel Grid.Row="0"
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <TextBlock Text="压缩质量"
+                               Style="{StaticResource FieldLabelStyle}"
+                               Margin="20,0,8,0" />
                     <TextBox x:Name="QualityTextBox"
                              Width="64"
                              Text="90"
@@ -292,45 +345,45 @@
                                Margin="6,0,0,0"
                                VerticalAlignment="Center"
                                Foreground="{StaticResource SubtleTextBrush}" />
-                </WrapPanel>
+                </StackPanel>
 
-                <Grid Grid.Row="1" Margin="0,12,0,0" VerticalAlignment="Center">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           Text="输出选项"
+                           Style="{StaticResource FieldLabelStyle}"
+                           Margin="0,12,8,0" />
+                <ComboBox x:Name="OutputModeComboBox"
+                          Grid.Row="1"
+                          Grid.Column="1"
+                          Width="280"
+                          Margin="0,12,0,0"
+                          Style="{StaticResource ComboBoxStyle}"
+                          SelectedIndex="0"
+                          SelectionChanged="OutputModeComboBox_SelectionChanged"
+                          ToolTip="选择输出图片的保存位置">
+                    <ComboBoxItem Content="输出到原图所在目录" />
+                    <ComboBoxItem Content="输出到指定目录" />
+                </ComboBox>
 
-                    <TextBlock Text="输出选项" Style="{StaticResource FieldLabelStyle}" />
-                    <ComboBox x:Name="OutputModeComboBox"
-                              Grid.Column="1"
-                              Width="210"
-                              Style="{StaticResource ComboBoxStyle}"
-                              SelectedIndex="0"
-                              SelectionChanged="OutputModeComboBox_SelectionChanged"
-                              ToolTip="选择输出图片的保存位置">
-                        <ComboBoxItem Content="输出到原图所在目录" />
-                        <ComboBoxItem Content="输出到指定目录" />
-                    </ComboBox>
-
-                    <TextBlock x:Name="OutputDirectoryLabel"
-                               Grid.Column="2"
-                               Text="追加子目录"
-                               Style="{StaticResource FieldLabelStyle}"
-                               Margin="20,0,8,0" />
-                    <TextBox x:Name="OutputDirectoryTextBox"
-                             Grid.Column="3"
-                             MinWidth="200"
-                             Style="{StaticResource InputBoxStyle}"
-                             ToolTip="在原图所在目录下追加的子目录，可留空"
-                             TextChanged="OutputDirectoryTextBox_TextChanged" />
-                </Grid>
+                <TextBlock x:Name="OutputDirectoryLabel"
+                           Grid.Row="1"
+                           Grid.Column="2"
+                           Text="追加子目录"
+                           Style="{StaticResource FieldLabelStyle}"
+                           Margin="48,12,8,0" />
+                <TextBox x:Name="OutputDirectoryTextBox"
+                         Grid.Row="1"
+                         Grid.Column="3"
+                         Margin="0,12,0,0"
+                         Style="{StaticResource InputBoxStyle}"
+                         HorizontalAlignment="Stretch"
+                         ToolTip="在原图所在目录下追加的子目录，可留空"
+                         TextChanged="OutputDirectoryTextBox_TextChanged" />
             </Grid>
         </Border>
 
         <!-- 下：操作栏 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="16,11" Margin="0,12,0,0">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Padding="16,11" Margin="0,12,0,0">
             <Grid>
                 <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                     <Button x:Name="AddImagesButton"

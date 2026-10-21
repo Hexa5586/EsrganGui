@@ -66,8 +66,10 @@ namespace EsrganGui
             {
                 UpdateColumnWidths();
                 UpdateJobControls();
+                UpdateProgress();
             };
             UpdateJobControls();
+            UpdateProgress();
         }
 
         /// <summary>扫描 realesrgan\models，加载具有 .param + .bin 配对的模型。</summary>
@@ -639,6 +641,19 @@ namespace EsrganGui
             StatusText.Text = text;
         }
 
+        /// <summary>进度条：Value 为已完成数量，Maximum 为要处理的总数。</summary>
+        private void UpdateProgress(int? maximum = null, int? value = null)
+        {
+            if (JobProgressBar is null)
+            {
+                return;
+            }
+
+            var max = Math.Max(1, maximum ?? Jobs.Count);
+            JobProgressBar.Maximum = max;
+            JobProgressBar.Value = Math.Clamp(value ?? Jobs.Count(job => job.IsCompleted), 0, max);
+        }
+
         /// <summary>依次对列表中的图片执行放大；完成后该项变为完成色。</summary>
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
@@ -659,6 +674,7 @@ namespace EsrganGui
             _isProcessing = true;
             _jobCts = new CancellationTokenSource();
             UpdateJobControls();
+            UpdateProgress(jobs.Count, 0);
 
             var succeeded = 0;
             var failed = 0;
@@ -680,6 +696,7 @@ namespace EsrganGui
                     {
                         job.IsCompleted = true;
                         succeeded++;
+                        UpdateProgress(jobs.Count, succeeded);
                     }
                     else
                     {
