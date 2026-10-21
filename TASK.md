@@ -99,3 +99,21 @@ ComboBox 有2个选项：
 # 任务 7
 
 编写暗色主题，命名为 Dark，整体配色参考 Dracula，主题色仍然选定为 Light 主题中的蓝色。
+
+# 任务 8
+
+开始实现核心的放大功能。
+
+关于NCNN的调用方法，参考 ./EsrganTools/upscale.cmd。
+
+完成放大的图片，其对应的项背景变为 #55FF55 (Light) #00DD00 (Dark)，前景变为 #000000。
+
+在开始放大作业后，NCNN 进程应该由本程序掌握，在点击强制停止时 KILL NCNN 进程。
+
+# 任务 9
+
+通过调整 Margin 让“模型”的 ComboBox 左侧和输出选项的 ComboBox 左侧对齐；
+
+缩短 追加子目录（或输出目录）的 TextBox 的长度，同时通过调整 Margin 让“追加子目录” Label 与 “压缩输出” 的 CheckBox 对齐。
+
+在上栏和中栏之间加一个蓝色主题的 ProgressBar，值为 完成放大的图片数，最大值为要处理的总图片数。

@@ -11,6 +11,7 @@ namespace EsrganGui.Models
         private int _index;
         private string _sourcePath = string.Empty;
         private string _outputPath = string.Empty;
+        private bool _isCompleted;
 
         public ImageJob()
         {
@@ -42,6 +43,13 @@ namespace EsrganGui.Models
         {
             get => _outputPath;
             set => SetField(ref _outputPath, value);
+        }
+
+        /// <summary>该项是否已成功完成放大。</summary>
+        public bool IsCompleted
+        {
+            get => _isCompleted;
+            set => SetField(ref _isCompleted, value);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -35,6 +35,11 @@ namespace EsrganGui
 
         private AppPreferences _preferences = new();
 
+        private Process? _engineProcess;
+        private Process? _ffmpegProcess;
+        private CancellationTokenSource? _jobCts;
+        private bool _isProcessing;
+
         private Point? _marqueeOrigin;
         private Point? _marqueeLastPoint;
         private bool _isMarqueeActive;
@@ -57,7 +62,12 @@ namespace EsrganGui
             DataContext = this;
             LoadModels();
             FitToWorkArea();
-            Jobs.CollectionChanged += (_, _) => UpdateColumnWidths();
+            Jobs.CollectionChanged += (_, _) =>
+            {
+                UpdateColumnWidths();
+                UpdateJobControls();
+            };
+            UpdateJobControls();
         }
 
         /// <summary>扫描 realesrgan\models，加载具有 .param + .bin 配对的模型。</summary>
@@ -509,6 +519,7 @@ namespace EsrganGui
         private void ModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             RecalculateOutputPaths();
+            UpdateJobControls();
         }
 
         private void OutputModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -606,6 +617,316 @@ namespace EsrganGui
             }
         }
 
+        /// <summary>根据是否正在执行，更新按钮与配置区的可用状态。</summary>
+        private void UpdateJobControls()
+        {
+            if (StartButton is null)
+            {
+                return;
+            }
+
+            var idle = !_isProcessing;
+            StartButton.IsEnabled = idle && Jobs.Count > 0 && ModelComboBox.SelectedItem is string;
+            StopButton.IsEnabled = !idle;
+            SettingsPanel.IsEnabled = idle;
+            AddImagesButton.IsEnabled = idle;
+            RemoveSelectedButton.IsEnabled = idle;
+            PreferencesButton.IsEnabled = idle;
+        }
+
+        private void SetStatus(string text)
+        {
+            StatusText.Text = text;
+        }
+
+        /// <summary>依次对列表中的图片执行放大；完成后该项变为完成色。</summary>
+        private async void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isProcessing ||
+                Jobs.Count == 0 ||
+                ModelComboBox.SelectedItem is not string modelName)
+            {
+                return;
+            }
+
+            var jobs = Jobs.ToList();
+            var compress = CompressCheckBox.IsChecked == true;
+            var quality = int.TryParse(QualityTextBox.Text, out var parsedQuality)
+                ? Math.Clamp(parsedQuality, 1, 100)
+                : 90;
+            var scale = GetModelScale(modelName);
+
+            _isProcessing = true;
+            _jobCts = new CancellationTokenSource();
+            UpdateJobControls();
+
+            var succeeded = 0;
+            var failed = 0;
+
+            try
+            {
+                for (var i = 0; i < jobs.Count; i++)
+                {
+                    if (_jobCts.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    var job = jobs[i];
+                    job.IsCompleted = false;
+                    SetStatus($"正在处理 {i + 1}/{jobs.Count}：{Path.GetFileName(job.SourcePath)}");
+
+                    if (await UpscaleJobAsync(job, modelName, scale, compress, quality, _jobCts.Token))
+                    {
+                        job.IsCompleted = true;
+                        succeeded++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 用户点击“强制停止”
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"处理过程中发生错误：{ex.Message}", "ESRGAN GUI",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                var stopped = _jobCts?.IsCancellationRequested == true;
+
+                _isProcessing = false;
+                _engineProcess = null;
+                _ffmpegProcess = null;
+                _jobCts?.Dispose();
+                _jobCts = null;
+
+                UpdateJobControls();
+                SetStatus(stopped
+                    ? $"已停止：成功 {succeeded}，失败 {failed}"
+                    : $"已完成：成功 {succeeded}，失败 {failed}");
+            }
+        }
+
+        /// <summary>强制停止：取消当前任务并 KILL 掉本程序启动的 NCNN（以及 ffmpeg）进程。</summary>
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_isProcessing)
+            {
+                return;
+            }
+
+            SetStatus("正在停止...");
+            _jobCts?.Cancel();
+            TryKill(_engineProcess);
+            TryKill(_ffmpegProcess);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            // 关闭窗口时不要留下孤立的引擎进程
+            _jobCts?.Cancel();
+            TryKill(_engineProcess);
+            TryKill(_ffmpegProcess);
+            base.OnClosing(e);
+        }
+
+        private async Task<bool> UpscaleJobAsync(ImageJob job, string modelName, int scale,
+            bool compress, int quality, CancellationToken cancellationToken)
+        {
+            if (!File.Exists(job.SourcePath) || string.IsNullOrWhiteSpace(job.OutputPath))
+            {
+                return false;
+            }
+
+            var outputPath = job.OutputPath;
+            var outputDirectory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
+
+            // 压缩时先由引擎输出临时 PNG，再用 ffmpeg 转成 JPG
+            var temporaryPath = compress
+                ? Path.Combine(
+                    string.IsNullOrEmpty(outputDirectory) ? AppContext.BaseDirectory : outputDirectory,
+                    $"~esrgan_{Guid.NewGuid():N}.png")
+                : outputPath;
+
+            try
+            {
+                var engineArguments = new[]
+                {
+                    "-i", job.SourcePath,
+                    "-o", temporaryPath,
+                    "-n", modelName,
+                    "-s", scale.ToString(),
+                    "-t", "0",
+                    "-g", "0",
+                    "-m", ToolPaths.ModelsDirectory,
+                    "-f", "png",
+                };
+
+                var engineExitCode = await RunProcessAsync(
+                    ToolPaths.EnginePath,
+                    engineArguments,
+                    process => _engineProcess = process,
+                    cancellationToken);
+
+                if (engineExitCode != 0 || !File.Exists(temporaryPath))
+                {
+                    return false;
+                }
+
+                if (!compress)
+                {
+                    return true;
+                }
+
+                // 与 upscale.ps1 相同的质量映射：1..100 → mjpeg qscale 2..31
+                var qscale = Math.Clamp((int)Math.Round((100 - quality) * 31.0 / 100.0), 2, 31);
+                var ffmpegArguments = new[]
+                {
+                    "-y", "-hide_banner", "-loglevel", "error",
+                    "-i", temporaryPath,
+                    "-q:v", qscale.ToString(),
+                    outputPath,
+                };
+
+                var ffmpegExitCode = await RunProcessAsync(
+                    ToolPaths.FfmpegPath,
+                    ffmpegArguments,
+                    process => _ffmpegProcess = process,
+                    cancellationToken);
+
+                return ffmpegExitCode == 0 && File.Exists(outputPath);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (compress)
+                {
+                    TryDelete(temporaryPath);
+                }
+            }
+        }
+
+        private static async Task<int> RunProcessAsync(string fileName, IEnumerable<string> arguments,
+            Action<Process?> setCurrentProcess, CancellationToken cancellationToken)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                WorkingDirectory = AppContext.BaseDirectory,
+            };
+
+            foreach (var argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+
+            Process? process = null;
+            try
+            {
+                process = new Process { StartInfo = startInfo };
+                setCurrentProcess(process);
+                process.Start();
+
+                var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
+                var standardError = process.StandardError.ReadToEndAsync(cancellationToken);
+
+                try
+                {
+                    await process.WaitForExitAsync(cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    TryKill(process);
+                    throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        await standardOutput;
+                    }
+                    catch
+                    {
+                        // 进程被终止时读取可能中断
+                    }
+
+                    try
+                    {
+                        await standardError;
+                    }
+                    catch
+                    {
+                        // 同上
+                    }
+                }
+
+                return process.ExitCode;
+            }
+            finally
+            {
+                setCurrentProcess(null);
+                process?.Dispose();
+            }
+        }
+
+        private static void TryKill(Process? process)
+        {
+            try
+            {
+                if (process is not null && !process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // 进程可能已经退出
+            }
+        }
+
+        private static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch
+            {
+                // 临时文件删除失败不影响任务结果
+            }
+        }
+
+        /// <summary>从模型名解析放大倍数（realesr-animevideov3-x2 → 2）。</summary>
+        private static int GetModelScale(string? modelName)
+        {
+            var match = Regex.Match(modelName ?? string.Empty, @"x(\d+)", RegexOptions.IgnoreCase);
+            return match.Success && int.TryParse(match.Groups[1].Value, out var scale) ? scale : 4;
+        }
+
         /// <summary>选择本地图片并追加到任务列表。</summary>
         private void AddImagesButton_Click(object sender, RoutedEventArgs e)
         {
@@ -628,7 +949,7 @@ namespace EsrganGui
         /// <summary>从资源管理器拖入文件时接受文件拖放。</summary>
         private void JobList_DragOver(object sender, DragEventArgs e)
         {
-            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop)
+            e.Effects = !_isProcessing && e.Data.GetDataPresent(DataFormats.FileDrop)
                 ? DragDropEffects.Copy
                 : DragDropEffects.None;
             e.Handled = true;
@@ -636,7 +957,7 @@ namespace EsrganGui
 
         private void JobList_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetData(DataFormats.FileDrop) is not string[] paths)
+            if (_isProcessing || e.Data.GetData(DataFormats.FileDrop) is not string[] paths)
             {
                 return;
             }
