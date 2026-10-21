@@ -56,6 +56,15 @@
             </Setter>
         </Style>
 
+        <!-- 去掉 GridView 表头行默认的 2 DIP 左右留白，避免表头与卡片边框之间出现白边 -->
+        <!-- 该 Margin 由 GridViewHeaderRowPresenter 在内部设置，需在代码中重置；样式 setter 优先级不够。 -->
+
+        <!-- 列表卡片：去掉圆角与内边距，避免表头悬停时四周露出白边 -->
+        <Style x:Key="ListCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+
         <!-- 列表列标题：完全自定义模板，不继承系统主题样式 -->
         <Style x:Key="ColumnHeaderStyle" TargetType="GridViewColumnHeader">
             <Setter Property="Background" Value="{DynamicResource HeaderBackgroundBrush}" />
@@ -266,7 +275,7 @@
         </Grid.RowDefinitions>
 
         <!-- 上：任务列表 -->
-        <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="0" Style="{StaticResource ListCardStyle}">
             <Grid>
                 <ListView x:Name="JobList"
                           ItemsSource="{Binding Jobs}"

@@ -70,6 +70,20 @@ namespace EsrganGui
             };
             UpdateJobControls();
             UpdateProgress();
+
+            Loaded += (_, _) => FixHeaderRowMargin();
+        }
+
+        /// <summary>
+        /// GridViewHeaderRowPresenter 默认带有 2 DIP 的左右 Margin，会在表头外侧露出白边。
+        /// 该值是内部局部值，样式无法覆盖，因此在模板加载后直接清零。
+        /// </summary>
+        private void FixHeaderRowMargin()
+        {
+            if (FindVisualChild<GridViewHeaderRowPresenter>(JobList) is { } presenter)
+            {
+                presenter.Margin = new Thickness(0);
+            }
         }
 
         /// <summary>扫描 realesrgan\models，加载具有 .param + .bin 配对的模型。</summary>
