@@ -1,0 +1,607 @@
+﻿<Window x:Class="EsrganGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EsrganGui"
+        xmlns:conv="clr-namespace:EsrganGui.Converters"
+        mc:Ignorable="d"
+        d:DesignWidth="1040"
+        d:DesignHeight="700"
+        Title="ESRGAN GUI by inori_koishi"
+        Width="1040"
+        Height="700"
+        MinWidth="820"
+        MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F4F6"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="13"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display">
+    <Window.Resources>
+        <conv:PathToThumbnailConverter x:Key="ThumbnailConverter" DecodePixelWidth="320" />
+
+        <SolidColorBrush x:Key="TextBrush" Color="#1F2937" />
+        <SolidColorBrush x:Key="SubtleTextBrush" Color="#6B7280" />
+        <SolidColorBrush x:Key="CardBorderBrush" Color="#E3E7EC" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+        <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
+
+        <!-- 卡片容器 -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="1" />
+        </Style>
+
+        <!-- 配置栏标签 -->
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+
+        <!-- 普通按钮 -->
+        <Style x:Key="ButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="100" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.82" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 主要操作按钮 -->
+        <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- 输入框 -->
+        <Style x:Key="InputBoxStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"
+                                          Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Hidden" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter Property="Foreground" Value="#9CA3AF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 下拉项 -->
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd"
+                                Margin="4,1"
+                                Padding="{TemplateBinding Padding}"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F1F4F8" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E8F0FE" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 下拉框：白底平涂 + 圆角 -->
+        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False"
+                                          ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Chrome"
+                                                Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                CornerRadius="6"
+                                                SnapsToDevicePixels="True">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="28" />
+                                                </Grid.ColumnDefinitions>
+                                                <Path Grid.Column="1"
+                                                      Width="10"
+                                                      Height="6"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Data="M 0,1 L 5,6 L 10,1"
+                                                      Stroke="{StaticResource SubtleTextBrush}"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeThickness="1.6" />
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              IsHitTestVisible="False" />
+
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom"
+                                   PopupAnimation="Fade">
+                                <Border x:Name="DropDownBorder"
+                                        Margin="0,4,0,0"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Background="White"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        SnapsToDevicePixels="True">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="12"
+                                                          Color="#000000"
+                                                          Opacity="0.12"
+                                                          ShadowDepth="2" />
+                                    </Border.Effect>
+                                    <ScrollViewer Margin="0,4"
+                                                  CanContentScroll="True"
+                                                  SnapsToDevicePixels="True"
+                                                  VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#C9D0D9" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                </Trigger>
+                <Trigger Property="IsDropDownOpen" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#F3F4F6" />
+                    <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+                    <Setter Property="Foreground" Value="#9CA3AF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 复选框：圆角选择框，边框与 ComboBox 一致 -->
+        <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Padding" Value="8,0,0,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Root" Background="Transparent" SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Box"
+                                        Width="16"
+                                        Height="16"
+                                        VerticalAlignment="Center"
+                                        Background="White"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        SnapsToDevicePixels="True">
+                                    <Path x:Name="CheckMark"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Data="M 0,4 L 3,7 L 8,1"
+                                          Stroke="White"
+                                          StrokeEndLineCap="Round"
+                                          StrokeStartLineCap="Round"
+                                          StrokeThickness="1.8"
+                                          Visibility="Collapsed" />
+                                </Border>
+                                <ContentPresenter Grid.Column="1"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="#C9D0D9" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 列表列标题：可点击排序，可拖动调整列顺序 -->
+        <Style x:Key="ColumnHeaderStyle" TargetType="GridViewColumnHeader">
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="Foreground" Value="#4B5563" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EEF2F7" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 列表行 -->
+        <Style x:Key="JobListItemStyle" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderBrush="#F1F3F5"
+                                BorderThickness="0,0,0,1"
+                                SnapsToDevicePixels="True">
+                            <GridViewRowPresenter Columns="{TemplateBinding GridView.ColumnCollection}"
+                                                  Content="{TemplateBinding Content}"
+                                                  VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F7F9FC" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E8F0FE" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 路径单元格文字 -->
+        <Style x:Key="PathCellTextStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="12,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="400" />
+            <Setter Property="ToolTipService.ShowDuration" Value="30000" />
+            <Setter Property="ToolTipService.Placement" Value="Mouse" />
+        </Style>
+
+        <!-- 悬浮预览：低画质缩略图 + 完整路径 -->
+        <DataTemplate x:Key="PreviewToolTipTemplate">
+            <StackPanel MaxWidth="320">
+                <Border Margin="6,6,6,0"
+                        Background="#F3F4F6"
+                        CornerRadius="4">
+                    <Grid>
+                        <Image x:Name="Thumb"
+                               Margin="4"
+                               MaxWidth="308"
+                               MaxHeight="230"
+                               Stretch="Uniform"
+                               Source="{Binding Converter={StaticResource ThumbnailConverter}}" />
+                        <TextBlock x:Name="NoPreview"
+                                   Margin="12,18"
+                                   Foreground="#9CA3AF"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Text="暂无可用预览">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Source, ElementName=Thumb}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+                <TextBlock Margin="8,4,8,7"
+                           FontSize="11"
+                           Foreground="{StaticResource SubtleTextBrush}"
+                           Text="{Binding}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </DataTemplate>
+
+        <Style x:Key="PreviewToolTipStyle" TargetType="ToolTip">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MaxWidth" Value="340" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#D9DEE5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HasDropShadow" Value="True" />
+            <Setter Property="Placement" Value="Mouse" />
+        </Style>
+
+        <!-- 序号列 -->
+        <DataTemplate x:Key="IndexCellTemplate">
+            <TextBlock Margin="0,0,0,0"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource SubtleTextBrush}"
+                       Text="{Binding Index}" />
+        </DataTemplate>
+
+        <!-- 原图路径列 -->
+        <DataTemplate x:Key="SourcePathCellTemplate">
+            <TextBlock Style="{StaticResource PathCellTextStyle}"
+                       Text="{Binding SourcePath}"
+                       MouseLeftButtonUp="PathCell_MouseLeftButtonUp">
+                <TextBlock.ToolTip>
+                    <ToolTip Content="{Binding SourcePath}"
+                             ContentTemplate="{StaticResource PreviewToolTipTemplate}"
+                             Style="{StaticResource PreviewToolTipStyle}" />
+                </TextBlock.ToolTip>
+            </TextBlock>
+        </DataTemplate>
+
+        <!-- 输出图路径列 -->
+        <DataTemplate x:Key="OutputPathCellTemplate">
+            <TextBlock Style="{StaticResource PathCellTextStyle}"
+                       Text="{Binding OutputPath}"
+                       MouseLeftButtonUp="PathCell_MouseLeftButtonUp">
+                <TextBlock.ToolTip>
+                    <ToolTip Content="{Binding OutputPath}"
+                             ContentTemplate="{StaticResource PreviewToolTipTemplate}"
+                             Style="{StaticResource PreviewToolTipStyle}" />
+                </TextBlock.ToolTip>
+            </TextBlock>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" MinHeight="160" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 上：任务列表 -->
+        <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+            <Grid>
+                <ListView x:Name="JobList"
+                          ItemsSource="{Binding Jobs}"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Padding="0"
+                          SelectionMode="Extended"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ItemContainerStyle="{StaticResource JobListItemStyle}"
+                          SizeChanged="JobList_SizeChanged"
+                          PreviewMouseLeftButtonDown="JobList_PreviewMouseLeftButtonDown"
+                          PreviewMouseLeftButtonUp="JobList_PreviewMouseLeftButtonUp"
+                          MouseMove="JobList_MouseMove"
+                          LostMouseCapture="JobList_LostMouseCapture"
+                          AllowDrop="True"
+                          PreviewDragOver="JobList_DragOver"
+                          Drop="JobList_Drop">
+                    <ListView.View>
+                        <GridView AllowsColumnReorder="True">
+                            <GridViewColumn Width="72" CellTemplate="{StaticResource IndexCellTemplate}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Index"
+                                                          Content="序号"
+                                                          Style="{StaticResource ColumnHeaderStyle}"
+                                                          HorizontalContentAlignment="Center" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn Width="420" CellTemplate="{StaticResource SourcePathCellTemplate}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="SourcePath"
+                                                          Content="原图路径"
+                                                          Style="{StaticResource ColumnHeaderStyle}" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn Width="420" CellTemplate="{StaticResource OutputPathCellTemplate}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="OutputPath"
+                                                          Content="输出图路径"
+                                                          Style="{StaticResource ColumnHeaderStyle}" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <!-- 矩形框选的选框层，不参与命中测试 -->
+                <Canvas x:Name="MarqueeCanvas" ClipToBounds="True" IsHitTestVisible="False">
+                    <Border x:Name="MarqueeRectangle"
+                            Visibility="Collapsed"
+                            Background="#332563EB"
+                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="2"
+                            SnapsToDevicePixels="True" />
+                </Canvas>
+            </Grid>
+        </Border>
+
+        <!-- 中：配置栏 -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16,12" Margin="0,12,0,0">
+            <WrapPanel VerticalAlignment="Center">
+                <TextBlock Text="模型" Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox x:Name="ModelComboBox"
+                          Width="280"
+                          Style="{StaticResource ComboBoxStyle}"
+                          ItemsSource="{Binding Models}"
+                          ToolTip="模型读取自程序目录下的 realesrgan\models" />
+
+                <CheckBox x:Name="CompressCheckBox"
+                          Content="压缩输出"
+                          Margin="28,0,0,0"
+                          VerticalAlignment="Center"
+                          VerticalContentAlignment="Center"
+                          IsChecked="False"
+                          Style="{StaticResource CheckBoxStyle}"
+                          ToolTip="勾选后使用下方质量参数压缩输出图片" />
+
+                <TextBlock Text="压缩质量" Style="{StaticResource FieldLabelStyle}" Margin="20,0,8,0" />
+                <TextBox x:Name="QualityTextBox"
+                         Width="64"
+                         Text="90"
+                         MaxLength="3"
+                         Style="{StaticResource InputBoxStyle}"
+                         IsEnabled="{Binding IsChecked, ElementName=CompressCheckBox}"
+                         ToolTip="1 - 100"
+                         PreviewTextInput="QualityTextBox_PreviewTextInput"
+                         LostFocus="QualityTextBox_LostFocus" />
+                <TextBlock Text="%"
+                           Margin="6,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource SubtleTextBrush}" />
+            </WrapPanel>
+        </Border>
+
+        <!-- 下：操作栏 -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="16,11" Margin="0,12,0,0">
+            <Grid>
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                    <Button Content="添加图片..."
+                            Style="{StaticResource ButtonStyle}"
+                            Click="AddImagesButton_Click" />
+                    <TextBlock Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource SubtleTextBrush}"
+                               Text="{Binding Jobs.Count, StringFormat='共 {0} 项'}" />
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Content="开始执行" Style="{StaticResource AccentButtonStyle}" />
+                    <Button Content="强制停止"
+                            Margin="10,0,0,0"
+                            IsEnabled="False"
+                            Style="{StaticResource ButtonStyle}" />
+                    <Button Content="首选项..."
+                            Margin="10,0,0,0"
+                            Style="{StaticResource ButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

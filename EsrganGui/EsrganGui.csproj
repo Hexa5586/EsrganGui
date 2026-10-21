@@ -1,0 +1,92 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <EsrganToolsDir>$(MSBuildProjectDirectory)\..\EsrganTools</EsrganToolsDir>
+
+    <!--
+      工具平台条件：
+        Windows（默认）: dotnet build
+        Linux (x64)    : dotnet build -p:EsrganPlatform=Linux
+      Linux 构建会定义 ESRGAN_LINUX 编译符号（Windows 构建定义 ESRGAN_WINDOWS），
+      并把带 ELF 引擎和 Linux 版 ffmpeg 复制到独立的 bin\linux 输出目录。
+    -->
+    <EsrganPlatform Condition="'$(EsrganPlatform)' == ''">Windows</EsrganPlatform>
+    <BaseOutputPath Condition="'$(EsrganPlatform)' == 'Linux'">bin\linux\</BaseOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EsrganPlatform)' == 'Linux'">
+    <DefineConstants>$(DefineConstants);ESRGAN_LINUX</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(EsrganPlatform)' != 'Linux'">
+    <DefineConstants>$(DefineConstants);ESRGAN_WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    Windows 版工具，输出到：
+      <输出目录>\realesrgan\realesrgan-ncnn-vulkan.exe
+      <输出目录>\realesrgan\vcomp140.dll
+      <输出目录>\realesrgan\models\*.bin, *.param
+      <输出目录>\ffmpeg\ffmpeg.exe
+  -->
+  <ItemGroup Condition="'$(EsrganPlatform)' != 'Linux'">
+    <Content Include="$(EsrganToolsDir)\realesrgan-ncnn-vulkan.exe"
+             Link="realesrgan\realesrgan-ncnn-vulkan.exe"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\vcomp140.dll"
+             Link="realesrgan\vcomp140.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\models\**\*.bin;$(EsrganToolsDir)\models\**\*.param"
+             Link="realesrgan\models\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\ffmpeg\ffmpeg.exe"
+             Link="ffmpeg\ffmpeg.exe"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\ffmpeg\LICENSE.txt"
+             Link="ffmpeg\LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildProjectDirectory)\..\LICENSE"
+             Link="LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildProjectDirectory)\..\THIRD-PARTY-NOTICES.md"
+             Link="THIRD-PARTY-NOTICES.md"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    Linux (x64) 版工具，输出到：
+      <输出目录>\realesrgan\realesrgan-ncnn-vulkan   （ELF，无扩展名）
+      <输出目录>\realesrgan\models\*.bin, *.param
+      <输出目录>\ffmpeg\ffmpeg                        （Linux 版，无扩展名）
+  -->
+  <ItemGroup Condition="'$(EsrganPlatform)' == 'Linux'">
+    <Content Include="$(EsrganToolsDir)\realesrgan-ncnn-vulkan"
+             Link="realesrgan\realesrgan-ncnn-vulkan"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\models\**\*.bin;$(EsrganToolsDir)\models\**\*.param"
+             Link="realesrgan\models\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\ffmpeg-linux\ffmpeg"
+             Link="ffmpeg\ffmpeg"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(EsrganToolsDir)\ffmpeg-linux\LICENSE.txt"
+             Link="ffmpeg\LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
