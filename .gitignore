@@ -20,3 +20,6 @@ TestResults/
 
 # Misc
 *.log
+
+# Runtime preferences
+preferences.json

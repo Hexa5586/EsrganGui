@@ -23,12 +23,6 @@
     <Window.Resources>
         <conv:PathToThumbnailConverter x:Key="ThumbnailConverter" DecodePixelWidth="320" />
 
-        <SolidColorBrush x:Key="TextBrush" Color="#1F2937" />
-        <SolidColorBrush x:Key="SubtleTextBrush" Color="#6B7280" />
-        <SolidColorBrush x:Key="CardBorderBrush" Color="#E3E7EC" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
-        <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
-
         <!-- 卡片容器 -->
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White" />
@@ -36,297 +30,6 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="1" />
-        </Style>
-
-        <!-- 配置栏标签 -->
-        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource SubtleTextBrush}" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-        </Style>
-
-        <!-- 普通按钮 -->
-        <Style x:Key="ButtonStyle" TargetType="Button">
-            <Setter Property="MinWidth" Value="100" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="Padding" Value="16,0" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.82" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
-                                <Setter Property="Cursor" Value="Arrow" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 主要操作按钮 -->
-        <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentForegroundBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-
-        <!-- 输入框 -->
-        <Style x:Key="InputBoxStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="8,0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"
-                                          Focusable="False"
-                                          HorizontalScrollBarVisibility="Hidden"
-                                          VerticalScrollBarVisibility="Hidden" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
-                                <Setter Property="Foreground" Value="#9CA3AF" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 下拉项 -->
-        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="Bd"
-                                Margin="4,1"
-                                Padding="{TemplateBinding Padding}"
-                                Background="Transparent"
-                                CornerRadius="4"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#F1F4F8" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#E8F0FE" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- 下拉框：白底平涂 + 圆角 -->
-        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="10,0" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="ItemContainerStyle" Value="{StaticResource ComboBoxItemStyle}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Focusable="False"
-                                          ClickMode="Press"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="Chrome"
-                                                Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                CornerRadius="6"
-                                                SnapsToDevicePixels="True">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="28" />
-                                                </Grid.ColumnDefinitions>
-                                                <Path Grid.Column="1"
-                                                      Width="10"
-                                                      Height="6"
-                                                      HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"
-                                                      Data="M 0,1 L 5,6 L 10,1"
-                                                      Stroke="{StaticResource SubtleTextBrush}"
-                                                      StrokeEndLineCap="Round"
-                                                      StrokeStartLineCap="Round"
-                                                      StrokeThickness="1.6" />
-                                            </Grid>
-                                        </Border>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              IsHitTestVisible="False" />
-
-                            <Popup x:Name="PART_Popup"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   Placement="Bottom"
-                                   PopupAnimation="Fade">
-                                <Border x:Name="DropDownBorder"
-                                        Margin="0,4,0,0"
-                                        MinWidth="{TemplateBinding ActualWidth}"
-                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                        Background="White"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        SnapsToDevicePixels="True">
-                                    <Border.Effect>
-                                        <DropShadowEffect BlurRadius="12"
-                                                          Color="#000000"
-                                                          Opacity="0.12"
-                                                          ShadowDepth="2" />
-                                    </Border.Effect>
-                                    <ScrollViewer Margin="0,4"
-                                                  CanContentScroll="True"
-                                                  SnapsToDevicePixels="True"
-                                                  VerticalScrollBarVisibility="Auto">
-                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#C9D0D9" />
-                </Trigger>
-                <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                </Trigger>
-                <Trigger Property="IsDropDownOpen" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Background" Value="#F3F4F6" />
-                    <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-                    <Setter Property="Foreground" Value="#9CA3AF" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- 复选框：圆角选择框，边框与 ComboBox 一致 -->
-        <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="Padding" Value="8,0,0,0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Root" Background="Transparent" SnapsToDevicePixels="True">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Border x:Name="Box"
-                                        Width="16"
-                                        Height="16"
-                                        VerticalAlignment="Center"
-                                        Background="White"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="4"
-                                        SnapsToDevicePixels="True">
-                                    <Path x:Name="CheckMark"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          Data="M 0,4 L 3,7 L 8,1"
-                                          Stroke="White"
-                                          StrokeEndLineCap="Round"
-                                          StrokeStartLineCap="Round"
-                                          StrokeThickness="1.8"
-                                          Visibility="Collapsed" />
-                                </Border>
-                                <ContentPresenter Grid.Column="1"
-                                                  Margin="{TemplateBinding Padding}"
-                                                  HorizontalAlignment="Left"
-                                                  VerticalAlignment="Center"
-                                                  RecognizesAccessKey="True" />
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Box" Property="BorderBrush" Value="#C9D0D9" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
-                                <Setter Property="Cursor" Value="Arrow" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <!-- 列表列标题：可点击排序，可拖动调整列顺序 -->
@@ -522,7 +225,7 @@
                             <GridViewColumn Width="420" CellTemplate="{StaticResource OutputPathCellTemplate}">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="OutputPath"
-                                                          Content="输出图路径"
+                                                          Content="输出路径"
                                                           Style="{StaticResource ColumnHeaderStyle}" />
                                 </GridViewColumn.Header>
                             </GridViewColumn>
@@ -544,39 +247,82 @@
         </Border>
 
         <!-- 中：配置栏 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16,12" Margin="0,12,0,0">
-            <WrapPanel VerticalAlignment="Center">
-                <TextBlock Text="模型" Style="{StaticResource FieldLabelStyle}" />
-                <ComboBox x:Name="ModelComboBox"
-                          Width="280"
-                          Style="{StaticResource ComboBoxStyle}"
-                          ItemsSource="{Binding Models}"
-                          ToolTip="模型读取自程序目录下的 realesrgan\models" />
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16,14" Margin="0,12,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <CheckBox x:Name="CompressCheckBox"
-                          Content="压缩输出"
-                          Margin="28,0,0,0"
-                          VerticalAlignment="Center"
-                          VerticalContentAlignment="Center"
-                          IsChecked="False"
-                          Style="{StaticResource CheckBoxStyle}"
-                          ToolTip="勾选后使用下方质量参数压缩输出图片" />
+                <WrapPanel Grid.Row="0" VerticalAlignment="Center">
+                    <TextBlock Text="模型" Style="{StaticResource FieldLabelStyle}" />
+                    <ComboBox x:Name="ModelComboBox"
+                              Width="280"
+                              Style="{StaticResource ComboBoxStyle}"
+                              ItemsSource="{Binding Models}"
+                              SelectionChanged="ModelComboBox_SelectionChanged"
+                              ToolTip="模型读取自程序目录下的 realesrgan\models" />
 
-                <TextBlock Text="压缩质量" Style="{StaticResource FieldLabelStyle}" Margin="20,0,8,0" />
-                <TextBox x:Name="QualityTextBox"
-                         Width="64"
-                         Text="90"
-                         MaxLength="3"
-                         Style="{StaticResource InputBoxStyle}"
-                         IsEnabled="{Binding IsChecked, ElementName=CompressCheckBox}"
-                         ToolTip="1 - 100"
-                         PreviewTextInput="QualityTextBox_PreviewTextInput"
-                         LostFocus="QualityTextBox_LostFocus" />
-                <TextBlock Text="%"
-                           Margin="6,0,0,0"
-                           VerticalAlignment="Center"
-                           Foreground="{StaticResource SubtleTextBrush}" />
-            </WrapPanel>
+                    <CheckBox x:Name="CompressCheckBox"
+                              Content="压缩输出"
+                              Margin="48,0,0,0"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              IsChecked="False"
+                              Style="{StaticResource CheckBoxStyle}"
+                              ToolTip="勾选后使用下方质量参数压缩输出图片"
+                              Checked="OutputSettings_Changed"
+                              Unchecked="OutputSettings_Changed" />
+
+                    <TextBlock Text="压缩质量" Style="{StaticResource FieldLabelStyle}" Margin="20,0,8,0" />
+                    <TextBox x:Name="QualityTextBox"
+                             Width="64"
+                             Text="90"
+                             MaxLength="3"
+                             Style="{StaticResource InputBoxStyle}"
+                             IsEnabled="{Binding IsChecked, ElementName=CompressCheckBox}"
+                             ToolTip="1 - 100"
+                             PreviewTextInput="QualityTextBox_PreviewTextInput"
+                             LostFocus="QualityTextBox_LostFocus" />
+                    <TextBlock Text="%"
+                               Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource SubtleTextBrush}" />
+                </WrapPanel>
+
+                <Grid Grid.Row="1" Margin="0,12,0,0" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="输出选项" Style="{StaticResource FieldLabelStyle}" />
+                    <ComboBox x:Name="OutputModeComboBox"
+                              Grid.Column="1"
+                              Width="210"
+                              Style="{StaticResource ComboBoxStyle}"
+                              SelectedIndex="0"
+                              SelectionChanged="OutputModeComboBox_SelectionChanged"
+                              ToolTip="选择输出图片的保存位置">
+                        <ComboBoxItem Content="输出到原图所在目录" />
+                        <ComboBoxItem Content="输出到指定目录" />
+                    </ComboBox>
+
+                    <TextBlock x:Name="OutputDirectoryLabel"
+                               Grid.Column="2"
+                               Text="追加子目录"
+                               Style="{StaticResource FieldLabelStyle}"
+                               Margin="20,0,8,0" />
+                    <TextBox x:Name="OutputDirectoryTextBox"
+                             Grid.Column="3"
+                             MinWidth="200"
+                             Style="{StaticResource InputBoxStyle}"
+                             ToolTip="在原图所在目录下追加的子目录，可留空"
+                             TextChanged="OutputDirectoryTextBox_TextChanged" />
+                </Grid>
+            </Grid>
         </Border>
 
         <!-- 下：操作栏 -->
@@ -586,6 +332,10 @@
                     <Button Content="添加图片..."
                             Style="{StaticResource ButtonStyle}"
                             Click="AddImagesButton_Click" />
+                    <Button Content="删除所选项"
+                            Margin="10,0,0,0"
+                            Style="{StaticResource ButtonStyle}"
+                            Click="RemoveSelectedButton_Click" />
                     <TextBlock Margin="12,0,0,0"
                                VerticalAlignment="Center"
                                Foreground="{StaticResource SubtleTextBrush}"
@@ -599,7 +349,8 @@
                             Style="{StaticResource ButtonStyle}" />
                     <Button Content="首选项..."
                             Margin="10,0,0,0"
-                            Style="{StaticResource ButtonStyle}" />
+                            Style="{StaticResource ButtonStyle}"
+                            Click="PreferencesButton_Click" />
                 </StackPanel>
             </Grid>
         </Border>

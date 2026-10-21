@@ -1,10 +1,17 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace EsrganGui.Models
 {
     /// <summary>
     /// 列表中的一条超分任务。
     /// </summary>
-    public sealed class ImageJob
+    public sealed class ImageJob : INotifyPropertyChanged
     {
+        private int _index;
+        private string _sourcePath = string.Empty;
+        private string _outputPath = string.Empty;
+
         public ImageJob()
         {
         }
@@ -17,12 +24,37 @@ namespace EsrganGui.Models
         }
 
         /// <summary>从 1 开始的十进制序号。</summary>
-        public int Index { get; set; }
+        public int Index
+        {
+            get => _index;
+            set => SetField(ref _index, value);
+        }
 
         /// <summary>原图路径。</summary>
-        public string SourcePath { get; set; } = string.Empty;
+        public string SourcePath
+        {
+            get => _sourcePath;
+            set => SetField(ref _sourcePath, value);
+        }
 
         /// <summary>输出图路径。</summary>
-        public string OutputPath { get; set; } = string.Empty;
+        public string OutputPath
+        {
+            get => _outputPath;
+            set => SetField(ref _outputPath, value);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                return;
+            }
+
+            field = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

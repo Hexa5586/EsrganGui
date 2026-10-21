@@ -45,3 +45,57 @@
 我将 ESRGAN 组件放在了 ./EsrganTools 中。请你更改构建设置，将 realesrgan-ncnn-vulkan.exe，vcomp140.dll 和 models/ 组合为 realesrgan 目录，然后获取一个 ffmpeg，将它们放进构建目录（realesrgan/ 和 ffmpeg/ 目录与 EsrganGui.exe 同级）。
 
 去除 ComboBox 中的测试项，让其从 ./realesrgan/models（相对可执行文件） 中读取所有可用模型。不显示拓展名。
+
+# 任务 5
+
+加大 压缩图片 CheckBox 左侧的 Margin。
+
+将列标题“输出图路径”改为“输出路径”。
+
+添加“删除所选项”按钮，放在“添加图片...”的右侧。如果在放大完成后按下这个按钮，则询问是否一并删除放大后的图片，默认为否。无论如何不删除原始图片。
+
+将“中”栏的高度变为现在的2倍左右，下面的新行包含一个输出选项 ComboBox 和一个输出目录 TextBox。他们发生变更后，应当立即重新计算 ListView 中的所有输出路径。
+
+ComboBox 有2个选项：
+
+## 选项 1
+
+“输出到原图所在目录”。选择此项时，TextBox 的 Label 注释文本变更为 “追加子目录”，最终的输出路径就是 原图所在目录/追加子目录/图片_后缀.拓展名。
+
+## 选项 2
+
+“输出到指定目录”，启用 TextBox。TextBox 的 Label 注释文本变更为 “输出目录”，最终的输出路径就是 输出目录/图片_后缀.拓展名。
+
+若不压缩，拓展名统一变为 png，否则统一变为 jpg。
+
+后缀暂定为 模型名。
+
+# 任务 6
+
+设计“首选项”窗口，文件名定为 PreferencesWindow。首选项保存到 ./preferences.json（相对可执行文件）。
+
+主容器可滚动，内部选项由若干个 GroupBox 分类。下方则有 Apply, OK, Cancel 三个按钮。目前设计以下几个 Group：
+
+## Group 1：外观
+
+目前仅设置一个“主题”ComboBox，可保存选项，但具体功能待以后实现。
+
+## Group 2：输出
+
+目前仅设置一个“文件后缀选项”ComboBox以及紧邻的“后缀”TextBox。文件后缀选项有三个：
+
+### 选项 1
+
+“使用模型名”，TextBox禁用；
+
+### 选项 2
+
+“使用放大倍数”，TextBox禁用；
+
+### 选项 3
+
+“使用给定后缀”，TextBox 启用。
+
+# 任务 7
+
+编写暗色主题，命名为 Dark，整体配色参考 Dracula，主题色仍然选定为 Light 主题中的蓝色。

@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -32,6 +33,8 @@ namespace EsrganGui
         private GridViewColumnHeader? _pressedHeader;
         private Point? _headerPressPosition;
 
+        private AppPreferences _preferences = new();
+
         private Point? _marqueeOrigin;
         private Point? _marqueeLastPoint;
         private bool _isMarqueeActive;
@@ -50,6 +53,7 @@ namespace EsrganGui
         public MainWindow()
         {
             InitializeComponent();
+            _preferences = PreferencesStore.Load();
             DataContext = this;
             LoadModels();
             FitToWorkArea();
@@ -496,6 +500,112 @@ namespace EsrganGui
             QualityTextBox.Text = Math.Clamp(quality, 1, 100).ToString();
         }
 
+        /// <summary>添加或修改输出选项后，立即刷新所有任务的输出路径。</summary>
+        private void OutputSettings_Changed(object sender, RoutedEventArgs e)
+        {
+            RecalculateOutputPaths();
+        }
+
+        private void ModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RecalculateOutputPaths();
+        }
+
+        private void OutputModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (OutputDirectoryLabel is null || OutputDirectoryTextBox is null)
+            {
+                return;
+            }
+
+            var useSpecifiedDirectory = OutputModeComboBox.SelectedIndex == 1;
+            OutputDirectoryLabel.Text = useSpecifiedDirectory ? "输出目录" : "追加子目录";
+            OutputDirectoryTextBox.ToolTip = useSpecifiedDirectory
+                ? "输出图片的保存目录，所有输出会放在此目录下"
+                : "在原图所在目录下追加的子目录，可留空";
+
+            RecalculateOutputPaths();
+        }
+
+        private void OutputDirectoryTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            RecalculateOutputPaths();
+        }
+
+        private void RecalculateOutputPaths()
+        {
+            foreach (var job in Jobs)
+            {
+                job.OutputPath = BuildOutputPath(job.SourcePath);
+            }
+        }
+
+        /// <summary>根据当前模型、压缩设置和输出选项生成输出路径。</summary>
+        private string BuildOutputPath(string sourcePath)
+        {
+            var baseName = Path.GetFileNameWithoutExtension(sourcePath);
+            var extension = CompressCheckBox.IsChecked == true ? ".jpg" : ".png";
+            var fileName = $"{baseName}_{GetOutputSuffix()}{extension}";
+
+            var outputOption = OutputDirectoryTextBox is null ? string.Empty : OutputDirectoryTextBox.Text.Trim();
+
+            if (OutputModeComboBox is not null && OutputModeComboBox.SelectedIndex == 1)
+            {
+                // 指定输出目录为空时退回原图目录，避免生成相对路径
+                var targetDirectory = string.IsNullOrEmpty(outputOption)
+                    ? Path.GetDirectoryName(sourcePath) ?? string.Empty
+                    : outputOption;
+                return Path.Combine(targetDirectory, fileName);
+            }
+
+            var sourceDirectory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
+            return Path.Combine(sourceDirectory, outputOption, fileName);
+        }
+
+        /// <summary>按首选项决定输出文件的后缀。</summary>
+        private string GetOutputSuffix()
+        {
+            var modelName = ModelComboBox.SelectedItem as string;
+
+            return _preferences.SuffixMode switch
+            {
+                SuffixMode.Scale => GetScaleSuffix(modelName),
+                SuffixMode.Custom => string.IsNullOrWhiteSpace(_preferences.CustomSuffix)
+                    ? "out"
+                    : _preferences.CustomSuffix.Trim(),
+                _ => string.IsNullOrWhiteSpace(modelName) ? "out" : modelName,
+            };
+        }
+
+        /// <summary>从模型名中解析放大倍数（如 realesr-animevideov3-x2 → x2）。</summary>
+        private static string GetScaleSuffix(string? modelName)
+        {
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                return "out";
+            }
+
+            var match = Regex.Match(modelName, @"x(\d+)", RegexOptions.IgnoreCase);
+            return match.Success ? "x" + match.Groups[1].Value : "out";
+        }
+
+        /// <summary>打开首选项窗口；保存后立即刷新输出路径。</summary>
+        private void PreferencesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new PreferencesWindow(_preferences)
+            {
+                Owner = this,
+            };
+
+            window.ShowDialog();
+
+            if (window.Saved)
+            {
+                _preferences = window.Preferences;
+                RecalculateOutputPaths();
+            }
+        }
+
         /// <summary>选择本地图片并追加到任务列表。</summary>
         private void AddImagesButton_Click(object sender, RoutedEventArgs e)
         {
@@ -572,12 +682,31 @@ namespace EsrganGui
             }
         }
 
-        private static string BuildOutputPath(string sourcePath)
+        /// <summary>从列表中删除选中的任务，并重新排列序号。</summary>
+        private void RemoveSelectedButton_Click(object sender, RoutedEventArgs e)
         {
-            var directory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
-            var fileName = Path.GetFileNameWithoutExtension(sourcePath);
-            var extension = Path.GetExtension(sourcePath);
-            return Path.Combine(directory, $"{fileName}_out{extension}");
+            var selected = JobList.SelectedItems.Cast<ImageJob>().ToList();
+            if (selected.Count == 0)
+            {
+                return;
+            }
+
+            // TODO（待执行功能完成后实现）：若选中的任务“放大完成”，删除前应询问是否一并删除放大后的图片，
+            // 默认选择“否”；无论如何都不删除原始图片。目前还没有放大完成状态，所以这里只从列表移除。
+            foreach (var job in selected)
+            {
+                Jobs.Remove(job);
+            }
+
+            RenumberJobs();
+        }
+
+        private void RenumberJobs()
+        {
+            for (var i = 0; i < Jobs.Count; i++)
+            {
+                Jobs[i].Index = i + 1;
+            }
         }
     }
 }
