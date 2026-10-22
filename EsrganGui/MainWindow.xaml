@@ -9,6 +9,7 @@
         d:DesignWidth="1040"
         d:DesignHeight="700"
         Title="ESRGAN GUI v0.1"
+        Icon="pack://application:,,,/Assets/app.ico"
         Width="1040"
         Height="700"
         MinWidth="820"
