@@ -625,13 +625,14 @@ namespace EsrganGui
             var quality = int.TryParse(QualityTextBox.Text, out var parsedQuality)
                 ? Math.Clamp(parsedQuality, 1, 100)
                 : 90;
+            var normalized_quality = quality * 1.0 / 100;
             var template = _preferences.SuffixTemplate ?? string.Empty;
 
             var suffix = ReplaceTemplateToken(template, "%MODEL%", modelName);
             suffix = ReplaceTemplateToken(suffix, "%SCALE%",
                 GetModelScale(modelName).ToString("0.0", CultureInfo.InvariantCulture));
             suffix = ReplaceTemplateToken(suffix, "%COMPRESS%",
-                compressed ? quality.ToString("0.0", CultureInfo.InvariantCulture) : string.Empty);
+                compressed ? normalized_quality.ToString("0.0", CultureInfo.InvariantCulture) : string.Empty);
 
             return suffix;
         }
