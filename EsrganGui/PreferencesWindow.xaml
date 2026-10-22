@@ -73,7 +73,7 @@
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="80" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="主题" Style="{StaticResource FieldLabelStyle}" />
@@ -87,8 +87,6 @@
                                 <ComboBoxItem Content="跟随系统" />
                             </ComboBox>
                         </Grid>
-                        <TextBlock Text="选择“跟随系统”时，会根据 Windows 的应用主题自动切换浅色或深色。"
-                                   Style="{StaticResource HintTextStyle}" />
                     </StackPanel>
                 </GroupBox>
 
@@ -96,40 +94,39 @@
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="80" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <TextBlock Text="文件后缀选项" Style="{StaticResource FieldLabelStyle}" />
-                            <ComboBox x:Name="SuffixModeComboBox"
-                                      Grid.Column="1"
-                                      Width="200"
-                                      HorizontalAlignment="Left"
-                                      Style="{StaticResource ComboBoxStyle}"
-                                      SelectionChanged="SuffixModeComboBox_SelectionChanged">
-                                <ComboBoxItem Content="使用模型名" />
-                                <ComboBoxItem Content="使用放大倍数" />
-                                <ComboBoxItem Content="使用给定后缀" />
-                            </ComboBox>
-
-                            <TextBlock x:Name="SuffixLabel"
-                                       Grid.Row="1"
-                                       Text="后缀"
-                                       Style="{StaticResource FieldLabelStyle}"
-                                       Margin="0,12,8,0" />
+                            <TextBlock Text="后缀" Style="{StaticResource FieldLabelStyle}" />
                             <TextBox x:Name="SuffixTextBox"
-                                     Grid.Row="1"
                                      Grid.Column="1"
-                                     Margin="0,12,0,0"
-                                     MaxLength="64"
-                                     Style="{StaticResource InputBoxStyle}" />
+                                     MaxLength="128"
+                                     Style="{StaticResource InputBoxStyle}"
+                                     ToolTip="可用模板：%MODEL%、%SCALE%、%COMPRESS%" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" 
+                                       Text="%MODEL%：模型名；%SCALE%：放大倍数；%COMPRESS%：压缩质量"
+                                       Style="{StaticResource HintTextStyle}" />
+                            <CheckBox x:Name="RemoveTrailingUnderscoreCheckBox"
+                                      Grid.Row="2"
+                                      Grid.Column="1"
+                                      Content="去除文件名末尾的下划线"
+                                      Margin="0,12,0,0"
+                                      Style="{StaticResource CheckBoxStyle}" />
+                            <CheckBox x:Name="DeleteUncompressedCheckBox"
+                                      Grid.Row="3"
+                                      Grid.Column="1"
+                                      Content="删除未压缩的输出图片（启用压缩时生效）"
+                                      Margin="0,8,0,0"
+                                      Style="{StaticResource CheckBoxStyle}" />
                         </Grid>
-                        <TextBlock Text="选择“使用给定后缀”时，可自定义输出文件名的后缀。"
-                                   Style="{StaticResource HintTextStyle}" />
+                        
                     </StackPanel>
                 </GroupBox>
             </StackPanel>

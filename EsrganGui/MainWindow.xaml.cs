@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -528,6 +529,9 @@ namespace EsrganGui
             }
 
             QualityTextBox.Text = Math.Clamp(quality, 1, 100).ToString();
+
+            // 压缩质量也可能出现在后缀模板的 %COMPRESS% 中
+            RecalculateOutputPaths();
         }
 
         /// <summary>添加或修改输出选项后，立即刷新所有任务的输出路径。</summary>
@@ -576,48 +580,65 @@ namespace EsrganGui
         {
             var baseName = Path.GetFileNameWithoutExtension(sourcePath);
             var extension = CompressCheckBox.IsChecked == true ? ".jpg" : ".png";
-            var fileName = $"{baseName}_{GetOutputSuffix()}{extension}";
+            var stem = $"{baseName}_{GetOutputSuffix()}";
 
+            if (_preferences.RemoveTrailingUnderscore)
+            {
+                stem = stem.TrimEnd('_');
+            }
+
+            var fileName = stem + extension;
             var outputOption = OutputDirectoryTextBox is null ? string.Empty : OutputDirectoryTextBox.Text.Trim();
 
+            string outputDirectory;
             if (OutputModeComboBox is not null && OutputModeComboBox.SelectedIndex == 1)
             {
                 // 指定输出目录为空时退回原图目录，避免生成相对路径
-                var targetDirectory = string.IsNullOrEmpty(outputOption)
+                outputDirectory = string.IsNullOrEmpty(outputOption)
                     ? Path.GetDirectoryName(sourcePath) ?? string.Empty
                     : outputOption;
-                return Path.Combine(targetDirectory, fileName);
+            }
+            else
+            {
+                var sourceDirectory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
+                outputDirectory = Path.Combine(sourceDirectory, outputOption);
             }
 
-            var sourceDirectory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
-            return Path.Combine(sourceDirectory, outputOption, fileName);
+            var candidate = Path.Combine(outputDirectory, fileName);
+
+            // 极端情况下（例如后缀为空且不压缩）输出路径可能与原图相同，绝不覆盖原图
+            var suffixForCollision = 0;
+            while (string.Equals(candidate, sourcePath, StringComparison.OrdinalIgnoreCase))
+            {
+                suffixForCollision++;
+                candidate = Path.Combine(outputDirectory, $"{stem}_out{suffixForCollision}{extension}");
+            }
+
+            return candidate;
         }
 
-        /// <summary>按首选项决定输出文件的后缀。</summary>
+        /// <summary>展开首选项中的后缀模板。</summary>
         private string GetOutputSuffix()
         {
-            var modelName = ModelComboBox.SelectedItem as string;
+            var modelName = ModelComboBox.SelectedItem as string ?? string.Empty;
+            var compressed = CompressCheckBox.IsChecked == true;
+            var quality = int.TryParse(QualityTextBox.Text, out var parsedQuality)
+                ? Math.Clamp(parsedQuality, 1, 100)
+                : 90;
+            var template = _preferences.SuffixTemplate ?? string.Empty;
 
-            return _preferences.SuffixMode switch
-            {
-                SuffixMode.Scale => GetScaleSuffix(modelName),
-                SuffixMode.Custom => string.IsNullOrWhiteSpace(_preferences.CustomSuffix)
-                    ? "out"
-                    : _preferences.CustomSuffix.Trim(),
-                _ => string.IsNullOrWhiteSpace(modelName) ? "out" : modelName,
-            };
+            var suffix = ReplaceTemplateToken(template, "%MODEL%", modelName);
+            suffix = ReplaceTemplateToken(suffix, "%SCALE%",
+                GetModelScale(modelName).ToString("0.0", CultureInfo.InvariantCulture));
+            suffix = ReplaceTemplateToken(suffix, "%COMPRESS%",
+                compressed ? quality.ToString("0.0", CultureInfo.InvariantCulture) : string.Empty);
+
+            return suffix;
         }
 
-        /// <summary>从模型名中解析放大倍数（如 realesr-animevideov3-x2 → x2）。</summary>
-        private static string GetScaleSuffix(string? modelName)
+        private static string ReplaceTemplateToken(string input, string token, string value)
         {
-            if (string.IsNullOrWhiteSpace(modelName))
-            {
-                return "out";
-            }
-
-            var match = Regex.Match(modelName, @"x(\d+)", RegexOptions.IgnoreCase);
-            return match.Success ? "x" + match.Groups[1].Value : "out";
+            return Regex.Replace(input, Regex.Escape(token), _ => value, RegexOptions.IgnoreCase);
         }
 
         /// <summary>打开首选项窗口；保存后立即刷新输出路径。</summary>
@@ -632,8 +653,14 @@ namespace EsrganGui
 
             if (window.Saved)
             {
+                var themeChanged = _preferences.Theme != window.Preferences.Theme;
                 _preferences = window.Preferences;
-                ThemeManager.Apply(_preferences.Theme);
+
+                if (themeChanged)
+                {
+                    ThemeManager.Apply(_preferences.Theme);
+                }
+
                 RecalculateOutputPaths();
             }
         }
@@ -688,6 +715,7 @@ namespace EsrganGui
             var quality = int.TryParse(QualityTextBox.Text, out var parsedQuality)
                 ? Math.Clamp(parsedQuality, 1, 100)
                 : 90;
+            var deleteUncompressedOutput = _preferences.DeleteUncompressedOutput;
             var scale = GetModelScale(modelName);
 
             _isProcessing = true;
@@ -711,7 +739,8 @@ namespace EsrganGui
                     job.IsCompleted = false;
                     SetStatus($"正在处理 {i + 1}/{jobs.Count}：{Path.GetFileName(job.SourcePath)}");
 
-                    if (await UpscaleJobAsync(job, modelName, scale, compress, quality, _jobCts.Token))
+                    if (await UpscaleJobAsync(job, modelName, scale, compress, quality,
+                            deleteUncompressedOutput, _jobCts.Token))
                     {
                         job.IsCompleted = true;
                         succeeded++;
@@ -773,7 +802,7 @@ namespace EsrganGui
         }
 
         private async Task<bool> UpscaleJobAsync(ImageJob job, string modelName, int scale,
-            bool compress, int quality, CancellationToken cancellationToken)
+            bool compress, int quality, bool deleteUncompressedOutput, CancellationToken cancellationToken)
         {
             if (!File.Exists(job.SourcePath) || string.IsNullOrWhiteSpace(job.OutputPath))
             {
@@ -787,19 +816,25 @@ namespace EsrganGui
                 Directory.CreateDirectory(outputDirectory);
             }
 
-            // 压缩时先由引擎输出临时 PNG，再用 ffmpeg 转成 JPG
-            var temporaryPath = compress
-                ? Path.Combine(
-                    string.IsNullOrEmpty(outputDirectory) ? AppContext.BaseDirectory : outputDirectory,
-                    $"~esrgan_{Guid.NewGuid():N}.png")
+            // 压缩时引擎先输出未压缩 PNG（带 _raw 后缀），再由 ffmpeg 压缩
+            var outputDirectoryPath = string.IsNullOrEmpty(outputDirectory) ? AppContext.BaseDirectory : outputDirectory;
+            var rawPath = compress
+                ? Path.Combine(outputDirectoryPath,
+                    $"{Path.GetFileNameWithoutExtension(outputPath)}_raw.png")
                 : outputPath;
+
+            if (compress && string.Equals(rawPath, job.SourcePath, StringComparison.OrdinalIgnoreCase))
+            {
+                // 防止极端的文件名碰撞覆盖原图
+                rawPath = Path.Combine(outputDirectoryPath, $"~esrgan_{Guid.NewGuid():N}.png");
+            }
 
             try
             {
                 var engineArguments = new[]
                 {
                     "-i", job.SourcePath,
-                    "-o", temporaryPath,
+                    "-o", rawPath,
                     "-n", modelName,
                     "-s", scale.ToString(),
                     "-t", "0",
@@ -814,7 +849,7 @@ namespace EsrganGui
                     process => _engineProcess = process,
                     cancellationToken);
 
-                if (engineExitCode != 0 || !File.Exists(temporaryPath))
+                if (engineExitCode != 0 || !File.Exists(rawPath))
                 {
                     return false;
                 }
@@ -829,7 +864,7 @@ namespace EsrganGui
                 var ffmpegArguments = new[]
                 {
                     "-y", "-hide_banner", "-loglevel", "error",
-                    "-i", temporaryPath,
+                    "-i", rawPath,
                     "-q:v", qscale.ToString(),
                     outputPath,
                 };
@@ -852,9 +887,9 @@ namespace EsrganGui
             }
             finally
             {
-                if (compress)
+                if (compress && deleteUncompressedOutput)
                 {
-                    TryDelete(temporaryPath);
+                    TryDelete(rawPath);
                 }
             }
         }

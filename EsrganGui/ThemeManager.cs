@@ -26,6 +26,8 @@ namespace EsrganGui
         /// <summary>当前是否使用暗色主题。</summary>
         public static bool IsDark { get; private set; }
 
+        private static bool _hasApplied;
+
         public static void Apply(AppTheme theme)
         {
             var application = Application.Current;
@@ -59,6 +61,14 @@ namespace EsrganGui
             var alreadyApplied = existing?.Source?.OriginalString
                 .EndsWith(themeSource, StringComparison.OrdinalIgnoreCase) == true;
 
+            // 主题没有发生实际变化时直接返回：不换资源、不刷新标题栏，避免闪烁
+            if (_hasApplied && alreadyApplied && IsDark == useDark)
+            {
+                return;
+            }
+
+            var isFirstApply = !_hasApplied;
+
             if (!alreadyApplied)
             {
                 var dictionary = new ResourceDictionary
@@ -75,10 +85,15 @@ namespace EsrganGui
             }
 
             IsDark = useDark;
+            _hasApplied = true;
             UpdateTitleBars();
 
-            // 已打开的窗口在切换主题时可能来不及重绘标题栏，空闲时再补一次
-            application.Dispatcher.BeginInvoke(new Action(UpdateTitleBars), DispatcherPriority.ApplicationIdle);
+            // 首次应用由窗口的 SourceInitialized 处理标题栏，避免启动阶段重复重绘；
+            // 后续真正切换主题时，空闲时再补一次标题栏重绘。
+            if (!isFirstApply && application.Windows.Count > 0)
+            {
+                application.Dispatcher.BeginInvoke(new Action(UpdateTitleBars), DispatcherPriority.ApplicationIdle);
+            }
         }
 
         /// <summary>让窗口标题栏跟随主题（Windows 10 1809+ / Windows 11）。</summary>

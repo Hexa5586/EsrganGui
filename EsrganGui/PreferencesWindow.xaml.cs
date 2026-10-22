@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using EsrganGui.Models;
 
 namespace EsrganGui
@@ -20,24 +19,9 @@ namespace EsrganGui
 
             Preferences = preferences.Clone();
             ThemeComboBox.SelectedIndex = (int)Preferences.Theme;
-            SuffixModeComboBox.SelectedIndex = (int)Preferences.SuffixMode;
-            SuffixTextBox.Text = Preferences.CustomSuffix;
-            UpdateSuffixTextBoxState();
-        }
-
-        private void SuffixModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            UpdateSuffixTextBoxState();
-        }
-
-        private void UpdateSuffixTextBoxState()
-        {
-            if (SuffixTextBox is null || SuffixModeComboBox is null)
-            {
-                return;
-            }
-
-            SuffixTextBox.IsEnabled = SuffixModeComboBox.SelectedIndex == (int)SuffixMode.Custom;
+            SuffixTextBox.Text = Preferences.SuffixTemplate;
+            RemoveTrailingUnderscoreCheckBox.IsChecked = Preferences.RemoveTrailingUnderscore;
+            DeleteUncompressedCheckBox.IsChecked = Preferences.DeleteUncompressedOutput;
         }
 
         private bool TrySave()
@@ -45,18 +29,12 @@ namespace EsrganGui
             var preferences = new AppPreferences
             {
                 Theme = (AppTheme)Math.Max(0, ThemeComboBox.SelectedIndex),
-                SuffixMode = (SuffixMode)Math.Max(0, SuffixModeComboBox.SelectedIndex),
-                CustomSuffix = SuffixTextBox.Text.Trim(),
+                SuffixTemplate = SuffixTextBox.Text.Trim(),
+                RemoveTrailingUnderscore = RemoveTrailingUnderscoreCheckBox.IsChecked == true,
+                DeleteUncompressedOutput = DeleteUncompressedCheckBox.IsChecked == true,
             };
 
-            if (preferences.SuffixMode == SuffixMode.Custom &&
-                string.IsNullOrWhiteSpace(preferences.CustomSuffix))
-            {
-                MessageBox.Show(this, "请填写“后缀”内容，或改用其他后缀选项。", "首选项",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-                SuffixTextBox.Focus();
-                return false;
-            }
+            var themeChanged = preferences.Theme != Preferences.Theme;
 
             try
             {
@@ -69,7 +47,11 @@ namespace EsrganGui
                 return false;
             }
 
-            ThemeManager.Apply(preferences.Theme);
+            // 仅在主题字段确实变化时才应用主题，避免全局重绘/闪烁
+            if (themeChanged)
+            {
+                ThemeManager.Apply(preferences.Theme);
+            }
 
             Preferences = preferences;
             Saved = true;

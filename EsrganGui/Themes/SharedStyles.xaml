@@ -5,7 +5,7 @@
     <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource SubtleTextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Margin" Value="0,0,15,0" />
     </Style>
 
     <!-- 普通按钮 -->
@@ -290,6 +290,11 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- 默认 ToolTip 使用微软雅黑 -->
+    <Style TargetType="ToolTip">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
     </Style>
 
     <!-- 滚动条 -->
