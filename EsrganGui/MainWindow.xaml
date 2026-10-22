@@ -245,7 +245,7 @@
         <DataTemplate x:Key="SourcePathCellTemplate">
             <TextBlock Style="{StaticResource PathCellTextStyle}"
                        Text="{Binding SourcePath}"
-                       MouseLeftButtonUp="PathCell_MouseLeftButtonUp">
+                       MouseLeftButtonDown="PathCell_MouseLeftButtonDown">
                 <TextBlock.ToolTip>
                     <ToolTip Content="{Binding SourcePath}"
                              ContentTemplate="{StaticResource PreviewToolTipTemplate}"
@@ -258,7 +258,7 @@
         <DataTemplate x:Key="OutputPathCellTemplate">
             <TextBlock Style="{StaticResource PathCellTextStyle}"
                        Text="{Binding OutputPath}"
-                       MouseLeftButtonUp="PathCell_MouseLeftButtonUp">
+                       MouseLeftButtonDown="PathCell_MouseLeftButtonDown">
                 <TextBlock.ToolTip>
                     <ToolTip Content="{Binding OutputPath}"
                              ContentTemplate="{StaticResource PreviewToolTipTemplate}"

@@ -480,9 +480,14 @@ namespace EsrganGui
             }
         }
 
-        /// <summary>点击路径单元格：打开文件所在位置并选中该文件。</summary>
-        private void PathCell_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        /// <summary>双击路径单元格：打开文件所在位置并选中该文件。</summary>
+        private void PathCell_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.ClickCount != 2)
+            {
+                return;
+            }
+
             if (sender is TextBlock { Text: var path } && !string.IsNullOrWhiteSpace(path))
             {
                 OpenInExplorer(path);
