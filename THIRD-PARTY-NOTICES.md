@@ -6,7 +6,7 @@
 
 ## Real-ESRGAN / realesrgan-ncnn-vulkan
 
-- 组件：`EsrganTools/realesrgan-ncnn-vulkan.exe`（Windows）、`EsrganTools/realesrgan-ncnn-vulkan`（Linux）、`EsrganTools/models/*`
+- 组件：`EsrganTools/realesrgan-ncnn-vulkan.exe`（Windows）、`EsrganTools/models/*`
 - 许可证：BSD 3-Clause
 - 版权：Copyright (c) 2021, Xintao Wang
 - 项目主页：<https://github.com/xinntao/Real-ESRGAN>

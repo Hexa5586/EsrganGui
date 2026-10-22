@@ -865,7 +865,7 @@ namespace EsrganGui
                     return true;
                 }
 
-                // 与 upscale.ps1 相同的质量映射：1..100 → mjpeg qscale 2..31
+                // 质量映射：1..100 → mjpeg qscale 2..31
                 var qscale = Math.Clamp((int)Math.Round((100 - quality) * 31.0 / 100.0), 2, 31);
                 var ffmpegArguments = new[]
                 {
