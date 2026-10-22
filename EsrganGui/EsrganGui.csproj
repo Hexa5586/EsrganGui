@@ -26,6 +26,13 @@
     <DefineConstants>$(DefineConstants);ESRGAN_WINDOWS</DefineConstants>
   </PropertyGroup>
 
+  <!-- 发布配置：单文件 + ReadyToRun；具体架构由 publish 的 -r 参数指定（如 win-x64） -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
   <!--
     Windows 版工具，输出到：
       <输出目录>\realesrgan\realesrgan-ncnn-vulkan.exe
@@ -37,11 +44,13 @@
     <Content Include="$(EsrganToolsDir)\realesrgan-ncnn-vulkan.exe"
              Link="realesrgan\realesrgan-ncnn-vulkan.exe"
              CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <Content Include="$(EsrganToolsDir)\vcomp140.dll"
              Link="realesrgan\vcomp140.dll"
              CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <Content Include="$(EsrganToolsDir)\models\**\*.bin;$(EsrganToolsDir)\models\**\*.param"
              Link="realesrgan\models\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
@@ -49,7 +58,8 @@
     <Content Include="$(EsrganToolsDir)\ffmpeg\ffmpeg.exe"
              Link="ffmpeg\ffmpeg.exe"
              CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <Content Include="$(EsrganToolsDir)\ffmpeg\LICENSE.txt"
              Link="ffmpeg\LICENSE.txt"
              CopyToOutputDirectory="PreserveNewest"
@@ -74,7 +84,8 @@
     <Content Include="$(EsrganToolsDir)\realesrgan-ncnn-vulkan"
              Link="realesrgan\realesrgan-ncnn-vulkan"
              CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <Content Include="$(EsrganToolsDir)\models\**\*.bin;$(EsrganToolsDir)\models\**\*.param"
              Link="realesrgan\models\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
@@ -82,7 +93,8 @@
     <Content Include="$(EsrganToolsDir)\ffmpeg-linux\ffmpeg"
              Link="ffmpeg\ffmpeg"
              CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true" />
     <Content Include="$(EsrganToolsDir)\ffmpeg-linux\LICENSE.txt"
              Link="ffmpeg\LICENSE.txt"
              CopyToOutputDirectory="PreserveNewest"
