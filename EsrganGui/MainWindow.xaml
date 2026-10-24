@@ -33,7 +33,7 @@
             <Setter Property="Padding" Value="1" />
         </Style>
 
-        <!-- 蓝色进度条：Value = 已完成数量，Maximum = 总数 -->
+        <!-- 蓝色进度条：显示单张图片的处理进度（0-100） -->
         <Style x:Key="TaskProgressBarStyle" TargetType="ProgressBar">
             <Setter Property="Height" Value="8" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
@@ -161,9 +161,13 @@
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowSelectedBrush}" />
                             </Trigger>
                             <!-- 完成项：背景 #78EE87，文字 #000000 -->
-                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                            <DataTrigger Binding="{Binding ShowCompletedHighlight}" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#78EE87" />
                                 <Setter Property="Foreground" Value="#000000" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource FailedRowBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FailedRowForegroundBrush}" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -287,6 +291,7 @@
                           SelectionMode="Extended"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                           ItemContainerStyle="{StaticResource JobListItemStyle}"
+                          SelectionChanged="JobList_SelectionChanged"
                           SizeChanged="JobList_SizeChanged"
                           PreviewMouseLeftButtonDown="JobList_PreviewMouseLeftButtonDown"
                           PreviewMouseLeftButtonUp="JobList_PreviewMouseLeftButtonUp"
@@ -444,8 +449,14 @@
                     <Button x:Name="RemoveSelectedButton"
                             Content="删除项"
                             Margin="10,0,0,0"
+                            IsEnabled="False"
                             Style="{StaticResource ButtonStyle}"
                             Click="RemoveSelectedButton_Click" />
+                    <Button x:Name="ClearListButton"
+                            Content="清空列表"
+                            Margin="10,0,0,0"
+                            Style="{StaticResource ButtonStyle}"
+                            Click="ClearListButton_Click" />
                     <TextBlock Margin="12,0,0,0"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource SubtleTextBrush}"
@@ -482,7 +493,7 @@
                 <ProgressBar x:Name="JobProgressBar"
                              Grid.Row="0"
                              Minimum="0"
-                             Maximum="1"
+                             Maximum="100"
                              Value="0"
                              Style="{StaticResource TaskProgressBarStyle}" />
 

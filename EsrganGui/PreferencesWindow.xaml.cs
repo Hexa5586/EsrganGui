@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using EsrganGui.Models;
 
@@ -42,8 +44,8 @@ namespace EsrganGui
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, $"无法保存首选项：{ex.Message}", "首选项",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialog.Show(this, $"无法保存首选项：{ex.Message}", "首选项",
+                    MessageDialogButtons.Confirm, MessageBoxImage.Warning);
                 return false;
             }
 
@@ -56,6 +58,38 @@ namespace EsrganGui
             Preferences = preferences;
             Saved = true;
             return true;
+        }
+
+        private void ClearLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Log.Clear())
+            {
+                MessageDialog.Show(this, "无法清空日志文件，请确认文件未被其他程序占用。", "日志",
+                    MessageDialogButtons.Confirm, MessageBoxImage.Warning);
+            }
+        }
+
+        private void OpenLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!File.Exists(Log.FilePath))
+                {
+                    MessageDialog.Show(this, "日志文件尚不存在。", "日志",
+                        MessageDialogButtons.Confirm, MessageBoxImage.Information);
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo(Log.FilePath)
+                {
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageDialog.Show(this, $"无法打开日志文件：{ex.Message}", "日志",
+                    MessageDialogButtons.Confirm, MessageBoxImage.Warning);
+            }
         }
 
         private void ApplyButton_Click(object sender, RoutedEventArgs e)

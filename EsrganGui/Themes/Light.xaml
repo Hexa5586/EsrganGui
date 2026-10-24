@@ -15,6 +15,14 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
 
+    <SolidColorBrush x:Key="MessageDialogBackgroundBrush" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="MessageDialogSurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="MessageDialogTextBrush" Color="#1F2937" />
+    <SolidColorBrush x:Key="MessageDialogBorderBrush" Color="#E3E7EC" />
+    <SolidColorBrush x:Key="MessageDialogIconBackgroundBrush" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="MessageDialogWarningBrush" Color="#D97706" />
+    <SolidColorBrush x:Key="MessageDialogErrorBrush" Color="#DC2626" />
+
     <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="InputDisabledBackgroundBrush" Color="#F3F4F6" />
@@ -26,6 +34,8 @@
     <SolidColorBrush x:Key="RowBorderBrush" Color="#F1F3F5" />
     <SolidColorBrush x:Key="RowHoverBrush" Color="#F7F9FC" />
     <SolidColorBrush x:Key="RowSelectedBrush" Color="#E8F0FE" />
+    <SolidColorBrush x:Key="FailedRowBackgroundBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="FailedRowForegroundBrush" Color="#FFFFFF" />
 
     <SolidColorBrush x:Key="DropDownBackgroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="DropDownHoverBrush" Color="#F1F4F8" />

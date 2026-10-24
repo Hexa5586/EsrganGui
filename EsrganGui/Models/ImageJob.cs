@@ -12,6 +12,8 @@ namespace EsrganGui.Models
         private string _sourcePath = string.Empty;
         private string _outputPath = string.Empty;
         private bool _isCompleted;
+        private bool _isFailed;
+        private bool _showCompletedHighlight;
 
         public ImageJob()
         {
@@ -50,6 +52,18 @@ namespace EsrganGui.Models
         {
             get => _isCompleted;
             set => SetField(ref _isCompleted, value);
+        }
+
+        public bool IsFailed
+        {
+            get => _isFailed;
+            set => SetField(ref _isFailed, value);
+        }
+
+        public bool ShowCompletedHighlight
+        {
+            get => _showCompletedHighlight;
+            set => SetField(ref _showCompletedHighlight, value);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

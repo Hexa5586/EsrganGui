@@ -130,6 +130,24 @@
                         
                     </StackPanel>
                 </GroupBox>
+
+                <GroupBox Header="日志" Style="{StaticResource PreferenceGroupStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="清空日志"
+                                    Style="{StaticResource ButtonStyle}"
+                                    Click="ClearLogButton_Click" />
+                            <Button Content="打开日志"
+                                    Margin="10,0,0,0"
+                                    Style="{StaticResource ButtonStyle}"
+                                    Click="OpenLogButton_Click" />
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
             </StackPanel>
         </ScrollViewer>
 

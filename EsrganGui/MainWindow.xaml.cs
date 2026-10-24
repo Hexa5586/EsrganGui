@@ -29,6 +29,8 @@ namespace EsrganGui
             ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff",
         };
 
+        private static readonly Regex NcnnProgressPattern = new(@"^\s*(\d+(?:\.\d+)?)\s*%\s*$", RegexOptions.Compiled);
+
         private string? _sortProperty;
         private ListSortDirection _sortDirection = ListSortDirection.Ascending;
         private GridViewColumnHeader? _pressedHeader;
@@ -69,12 +71,13 @@ namespace EsrganGui
             FitToWorkArea();
             Jobs.CollectionChanged += (_, _) =>
             {
+                ClearCompletedHighlights();
                 UpdateColumnWidths();
                 UpdateJobControls();
-                UpdateProgress();
+                ResetImageProgress();
             };
             UpdateJobControls();
-            UpdateProgress();
+            ResetImageProgress();
 
             Loaded += (_, _) => FixHeaderRowMargin();
         }
@@ -141,6 +144,11 @@ namespace EsrganGui
             UpdateColumnWidths();
         }
 
+        private void JobList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateJobControls();
+        }
+
         private void UpdateColumnWidths()
         {
             if (JobList.View is not GridView gridView || JobList.ActualWidth <= 0)
@@ -197,6 +205,11 @@ namespace EsrganGui
         /// </summary>
         private void JobList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!_isProcessing)
+            {
+                ClearCompletedHighlights();
+            }
+
             var source = e.OriginalSource as DependencyObject;
 
             _pressedHeader = FindAncestor<GridViewColumnHeader>(source);
@@ -515,8 +528,8 @@ namespace EsrganGui
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"无法打开所在位置：{ex.Message}", "ESRGAN GUI",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialog.Show($"无法打开所在位置：{ex.Message}", "ESRGAN GUI",
+                    MessageDialogButtons.Confirm, MessageBoxImage.Warning);
             }
         }
 
@@ -684,7 +697,8 @@ namespace EsrganGui
             StopButton.IsEnabled = !idle;
             SettingsPanel.IsEnabled = idle;
             AddImagesButton.IsEnabled = idle;
-            RemoveSelectedButton.IsEnabled = idle;
+            RemoveSelectedButton.IsEnabled = idle && JobList.SelectedItems.Count > 0;
+            ClearListButton.IsEnabled = idle && Jobs.Count > 0;
             PreferencesButton.IsEnabled = idle;
         }
 
@@ -693,17 +707,40 @@ namespace EsrganGui
             StatusText.Text = text;
         }
 
-        /// <summary>进度条：Value 为已完成数量，Maximum 为要处理的总数。</summary>
-        private void UpdateProgress(int? maximum = null, int? value = null)
+        private void ResetImageProgress()
         {
             if (JobProgressBar is null)
             {
                 return;
             }
 
-            var max = Math.Max(1, maximum ?? Jobs.Count);
-            JobProgressBar.Maximum = max;
-            JobProgressBar.Value = Math.Clamp(value ?? Jobs.Count(job => job.IsCompleted), 0, max);
+            JobProgressBar.Maximum = 100;
+            JobProgressBar.Value = 0;
+        }
+
+        private void UpdateImageProgress(double percent)
+        {
+            if (Dispatcher.HasShutdownStarted)
+            {
+                return;
+            }
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action<double>(UpdateImageProgress), percent);
+                return;
+            }
+
+            JobProgressBar.Maximum = 100;
+            JobProgressBar.Value = Math.Clamp(percent, 0, 100);
+        }
+
+        private void ClearCompletedHighlights()
+        {
+            foreach (var job in Jobs)
+            {
+                job.ShowCompletedHighlight = false;
+            }
         }
 
         /// <summary>依次对列表中的图片执行放大；完成后该项变为完成色。</summary>
@@ -724,13 +761,19 @@ namespace EsrganGui
             var deleteUncompressedOutput = _preferences.DeleteUncompressedOutput;
             var scale = GetModelScale(modelName);
 
+            Log.Gui($"开始任务：共 {jobs.Count} 项，模型={modelName}，缩放={scale}x，压缩={(compress ? $"是（质量 {quality}）" : "否")}");
+
             _isProcessing = true;
             _jobCts = new CancellationTokenSource();
             UpdateJobControls();
-            UpdateProgress(jobs.Count, 0);
+            ResetImageProgress();
 
             var succeeded = 0;
             var failed = 0;
+            var completedNormally = false;
+            var stopped = false;
+
+            ClearCompletedHighlights();
 
             try
             {
@@ -743,20 +786,29 @@ namespace EsrganGui
 
                     var job = jobs[i];
                     job.IsCompleted = false;
+                    job.IsFailed = false;
+                    ResetImageProgress();
                     SetStatus($"正在处理 {i + 1}/{jobs.Count}：{Path.GetFileName(job.SourcePath)}");
+                    Log.Gui($"开始处理：{job.SourcePath}");
 
                     if (await UpscaleJobAsync(job, modelName, scale, compress, quality,
                             deleteUncompressedOutput, _jobCts.Token))
                     {
                         job.IsCompleted = true;
+                        job.ShowCompletedHighlight = true;
                         succeeded++;
-                        UpdateProgress(jobs.Count, succeeded);
+                        UpdateImageProgress(100);
+                        Log.Gui($"处理完成：{job.SourcePath} -> {job.OutputPath}");
                     }
                     else
                     {
+                        job.IsFailed = true;
                         failed++;
+                        Log.Gui($"处理失败：{job.SourcePath}");
                     }
                 }
+
+                completedNormally = true;
             }
             catch (OperationCanceledException)
             {
@@ -764,12 +816,17 @@ namespace EsrganGui
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, $"处理过程中发生错误：{ex.Message}", "ESRGAN GUI",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Log.Gui($"任务错误：{ex.Message}");
+                MessageDialog.Show(this, $"处理过程中发生错误：{ex.Message}", "ESRGAN GUI",
+                    MessageDialogButtons.Confirm, MessageBoxImage.Error);
             }
             finally
             {
-                var stopped = _jobCts?.IsCancellationRequested == true;
+                stopped = _jobCts?.IsCancellationRequested == true;
+
+                Log.Gui(stopped
+                    ? $"中止任务：成功 {succeeded}，失败 {failed}"
+                    : $"完成任务：成功 {succeeded}，失败 {failed}");
 
                 _isProcessing = false;
                 _engineProcess = null;
@@ -782,6 +839,15 @@ namespace EsrganGui
                     ? $"已停止：成功 {succeeded}，失败 {failed}"
                     : $"已完成：成功 {succeeded}，失败 {failed}");
             }
+
+            if (completedNormally && !stopped)
+            {
+                MessageDialog.Show(this,
+                    $"任务完成：成功 {succeeded} 项，失败 {failed} 项。",
+                    "ESRGAN GUI",
+                    MessageDialogButtons.Confirm,
+                    MessageBoxImage.Information);
+            }
         }
 
         /// <summary>强制停止：取消当前任务并 KILL 掉本程序启动的 NCNN（以及 ffmpeg）进程。</summary>
@@ -793,6 +859,7 @@ namespace EsrganGui
             }
 
             SetStatus("正在停止...");
+            Log.Gui("中止任务：收到停止请求");
             _jobCts?.Cancel();
             TryKill(_engineProcess);
             TryKill(_ffmpegProcess);
@@ -801,6 +868,11 @@ namespace EsrganGui
         protected override void OnClosing(CancelEventArgs e)
         {
             // 关闭窗口时不要留下孤立的引擎进程
+            if (_isProcessing)
+            {
+                Log.Gui("中止任务：程序关闭");
+            }
+
             _jobCts?.Cancel();
             TryKill(_engineProcess);
             TryKill(_ffmpegProcess);
@@ -853,6 +925,8 @@ namespace EsrganGui
                     ToolPaths.EnginePath,
                     engineArguments,
                     process => _engineProcess = process,
+                    Log.NcnnSource,
+                    UpdateImageProgress,
                     cancellationToken);
 
                 if (engineExitCode != 0 || !File.Exists(rawPath))
@@ -879,6 +953,8 @@ namespace EsrganGui
                     ToolPaths.FfmpegPath,
                     ffmpegArguments,
                     process => _ffmpegProcess = process,
+                    null,
+                    null,
                     cancellationToken);
 
                 return ffmpegExitCode == 0 && File.Exists(outputPath);
@@ -901,7 +977,8 @@ namespace EsrganGui
         }
 
         private static async Task<int> RunProcessAsync(string fileName, IEnumerable<string> arguments,
-            Action<Process?> setCurrentProcess, CancellationToken cancellationToken)
+            Action<Process?> setCurrentProcess, string? logSource, Action<double>? onProgress,
+            CancellationToken cancellationToken)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -925,8 +1002,8 @@ namespace EsrganGui
                 setCurrentProcess(process);
                 process.Start();
 
-                var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
-                var standardError = process.StandardError.ReadToEndAsync(cancellationToken);
+                var standardOutput = PumpOutputAsync(process.StandardOutput, logSource, onProgress, cancellationToken);
+                var standardError = PumpOutputAsync(process.StandardError, logSource, onProgress, cancellationToken);
 
                 try
                 {
@@ -965,6 +1042,35 @@ namespace EsrganGui
                 setCurrentProcess(null);
                 process?.Dispose();
             }
+        }
+
+        private static async Task PumpOutputAsync(StreamReader reader, string? logSource,
+            Action<double>? onProgress, CancellationToken cancellationToken)
+        {
+            while (await reader.ReadLineAsync(cancellationToken) is { } line)
+            {
+                if (onProgress is not null && TryParseNcnnProgress(line, out var percent))
+                {
+                    onProgress(percent);
+                    continue;
+                }
+
+                if (logSource is not null)
+                {
+                    Log.Write(logSource, line);
+                }
+            }
+        }
+
+        private static bool TryParseNcnnProgress(string line, out double percent)
+        {
+            percent = 0;
+            var match = NcnnProgressPattern.Match(line);
+            return match.Success &&
+                   double.TryParse(match.Groups[1].Value, NumberStyles.Float,
+                       CultureInfo.InvariantCulture, out percent) &&
+                   percent >= 0 &&
+                   percent <= 100;
         }
 
         private static void TryKill(Process? process)
@@ -1058,6 +1164,7 @@ namespace EsrganGui
                 }
 
                 Jobs.Add(new ImageJob(Jobs.Count + 1, path, BuildOutputPath(path)));
+                Log.Gui($"添加项：{path}");
             }
         }
 
@@ -1089,14 +1196,69 @@ namespace EsrganGui
                 return;
             }
 
-            // TODO（待执行功能完成后实现）：若选中的任务“放大完成”，删除前应询问是否一并删除放大后的图片，
-            // 默认选择“否”；无论如何都不删除原始图片。目前还没有放大完成状态，所以这里只从列表移除。
+            var completed = selected.Where(job => job.IsCompleted).ToList();
+            var deleteCompletedOutputs = false;
+            if (completed.Count > 0)
+            {
+                var message = completed.Count == 1
+                    ? $"“{Path.GetFileName(completed[0].SourcePath)}”已完成放大。\n是否一并删除放大后的图片？\n\n原始图片不会被删除。"
+                    : $"所选任务中有 {completed.Count} 项已完成放大。\n是否一并删除这些放大后的图片？\n\n原始图片不会被删除。";
+
+                var result = MessageDialog.Show(
+                    this, message, "ESRGAN GUI",
+                    MessageDialogButtons.YesNoCancel, MessageBoxImage.Question,
+                    MessageDialogResult.No);
+
+                if (result == MessageDialogResult.Cancel)
+                {
+                    return;
+                }
+
+                deleteCompletedOutputs = result == MessageDialogResult.Yes;
+            }
+
+            if (deleteCompletedOutputs)
+            {
+                foreach (var job in completed)
+                {
+                    if (!string.Equals(job.OutputPath, job.SourcePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        TryDelete(job.OutputPath);
+                    }
+                }
+            }
+
             foreach (var job in selected)
             {
+                Log.Gui($"删除项：{job.SourcePath}");
                 Jobs.Remove(job);
             }
 
             RenumberJobs();
+        }
+
+        private void ClearListButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Jobs.Count == 0)
+            {
+                return;
+            }
+
+            var result = MessageDialog.Show(
+                this,
+                "确定要清空列表吗？\n\n此操作不会删除任何文件。",
+                "ESRGAN GUI",
+                MessageDialogButtons.ConfirmCancel,
+                MessageBoxImage.Question,
+                MessageDialogResult.Cancel);
+
+            if (result != MessageDialogResult.Confirm)
+            {
+                return;
+            }
+
+            Log.Gui($"清空列表：共 {Jobs.Count} 项");
+            Jobs.Clear();
         }
 
         private void RenumberJobs()
